@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2d3848;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3d4a5c;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-1 border border-surface-3 rounded-xl;
+  }
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-probe-600/40 hover:shadow-lg hover:shadow-probe-950/20;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-supported {
+    @apply bg-green-500/15 text-green-400 ring-1 ring-green-500/20;
+  }
+  .badge-refuted {
+    @apply bg-red-500/15 text-red-400 ring-1 ring-red-500/20;
+  }
+  .badge-notfound {
+    @apply bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/20;
+  }
+  .badge-passed {
+    @apply bg-green-500/15 text-green-400;
+  }
+  .badge-failed {
+    @apply bg-red-500/15 text-red-400;
+  }
+  .badge-error {
+    @apply bg-amber-500/15 text-amber-400;
+  }
+  .stat-card {
+    @apply card p-5 flex flex-col gap-1;
+  }
+  .grade-ring {
+    @apply w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold border-[3px];
+  }
+}
