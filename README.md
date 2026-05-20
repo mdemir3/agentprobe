@@ -1,11 +1,15 @@
 # 🔍 AgentProbe
 
+[![CI](https://github.com/mdemir3/agentprobe/actions/workflows/ci.yml/badge.svg)](https://github.com/mdemir3/agentprobe/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/mdemir3/agentprobe/branch/main/graph/badge.svg)](https://codecov.io/gh/mdemir3/agentprobe)
+[![PyPI version](https://img.shields.io/pypi/v/agentprobe.svg)](https://pypi.org/project/agentprobe/)
+[![Python versions](https://img.shields.io/pypi/pyversions/agentprobe.svg)](https://pypi.org/project/agentprobe/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Docker Pulls](https://img.shields.io/docker/pulls/mdemir3/agentprobe)](https://hub.docker.com/r/mdemir3/agentprobe)
+
 **The first open-source AI agent that tests other AI agents.**
 
 > Selenium was for testing web apps. AgentProbe is for testing AI agents.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
@@ -67,15 +71,29 @@ agentprobe run <plan-id>
 agentprobe eval <run-id>
 ```
 
+### Day one: probe local Ollama (zero API cost)
+
+```bash
+# Terminal 1 — pull & run the model
+ollama run llama3.1
+
+# Terminal 2 — full probe + quality report (20 tests)
+pip install -e ".[dev]"
+agentprobe probe http://localhost:11434 --type rest --tests 50 --runs 3 --model llama3.1
+```
+
+Uses Ollama for test-plan generation and (when configured) claim judging. No cloud API keys required.
+
+`--runs 3` executes **each test 3 times** with seeds `seed`, `seed+1`, `seed+2`. The report shows **mean ± std** and a **95% confidence_interval** in JSON (`-o report.json`) — not a single point estimate.
+
 ### Try with the included dummy agent
 
 ```bash
 # Terminal 1: Start the dummy agent
-cd examples/dummy_tool_agent
-uvicorn app:app --port 8001
+python examples/dummy_tool_agent/app.py
 
 # Terminal 2: Probe it
-agentprobe connect http://localhost:8001 --type api --name "Dummy Agent"
+agentprobe probe http://localhost:8001 --type api --tests 20
 ```
 
 ## Architecture

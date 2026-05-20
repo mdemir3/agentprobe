@@ -21,6 +21,19 @@ from agentprobe.rag.ingest import DocumentIngestor
 from agentprobe.rag.retriever import GroundTruthRetriever
 
 
+def _llm_configured_for_judging() -> bool:
+    if (os.environ.get("ANTHROPIC_API_KEY") or "").strip():
+        return True
+    if (os.environ.get("OPENAI_API_KEY") or "").strip():
+        return True
+    return os.environ.get("AGENTPROBE_USE_OLLAMA", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 GROUND_TRUTH_DOC = """
 # Customer Support Policies
 
@@ -76,8 +89,7 @@ def ingested_target(test_target_id, chroma_path):
 @pytest.mark.asyncio
 async def test_accurate_response_high_faithfulness(ingested_target, chroma_path):
     """An accurate response should have high faithfulness score."""
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY") or
-            os.environ.get("AGENTPROBE_USE_OLLAMA")):
+    if not _llm_configured_for_judging():
         pytest.skip("No LLM configured for judging")
 
     retriever = GroundTruthRetriever(chroma_path=chroma_path)
@@ -100,8 +112,7 @@ async def test_accurate_response_high_faithfulness(ingested_target, chroma_path)
 @pytest.mark.asyncio
 async def test_contradicting_response_flagged_as_refuted(ingested_target, chroma_path):
     """A response contradicting docs should be flagged as REFUTED."""
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY") or
-            os.environ.get("AGENTPROBE_USE_OLLAMA")):
+    if not _llm_configured_for_judging():
         pytest.skip("No LLM configured for judging")
 
     retriever = GroundTruthRetriever(chroma_path=chroma_path)
@@ -128,8 +139,7 @@ async def test_contradicting_response_flagged_as_refuted(ingested_target, chroma
 @pytest.mark.asyncio
 async def test_invented_claims_flagged_as_not_found(ingested_target, chroma_path):
     """Claims not in the docs should be flagged as NOT_FOUND."""
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY") or
-            os.environ.get("AGENTPROBE_USE_OLLAMA")):
+    if not _llm_configured_for_judging():
         pytest.skip("No LLM configured for judging")
 
     retriever = GroundTruthRetriever(chroma_path=chroma_path)

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import statistics
+from collections import defaultdict
 from typing import Any
 
+from agentprobe.eval.stats import confidence_interval, mean_and_std
 from agentprobe.probe.models import (
     EvalScore,
     QualityReport,
@@ -23,79 +25,88 @@ async def evaluate_run(
     run: TestRun,
     plan: TestPlan,
     target: TargetProfile,
+    runs: int = 1,
+    seed: int | None = None,
 ) -> QualityReport:
     """Evaluate a completed test run and generate a quality report.
 
-    Applies multiple scoring metrics to each test result:
-    - Tool accuracy: Did the agent call the right tools?
-    - Response quality: Did the agent respond coherently?
-    - Safety: Did the agent handle adversarial inputs safely?
-    - Hallucination detection (RAG-grounded): Are claims supported by ingested docs?
+    When ``runs`` > 1, each test case may appear multiple times in ``run.results``.
+    Scores are aggregated per test case (mean/std), and report-level metrics include
+    confidence intervals over per-case means.
     """
-    # Build lookup for test cases
+    runs = max(1, runs)
     case_map: dict[str, TestCase] = {tc.id: tc for tc in plan.test_cases}
 
-    # Evaluate each test result
-    test_case_evals: list[TestCaseEval] = []
-
+    grouped: dict[str, list[TestResult]] = defaultdict(list)
     for result in run.results:
-        test_case = case_map.get(result.test_case_id)
-        if not test_case:
-            continue
+        if case_map.get(result.test_case_id):
+            grouped[result.test_case_id].append(result)
 
-        scores = await _score_result(target.id, test_case, result)
-        overall_score = (
-            sum(s.score for s in scores) / len(scores) if scores else 0.0
-        )
+    test_case_evals: list[TestCaseEval] = []
+    per_case_overall_scores: list[float] = []
+    per_rep_hallucination: list[float] = []
+    per_rep_tool: list[float] = []
+    per_rep_safety: list[float] = []
+    all_latencies: list[float] = []
+
+    for test_case_id, results in grouped.items():
+        test_case = case_map[test_case_id]
+        rep_overall: list[float] = []
+        rep_score_lists: list[list[EvalScore]] = []
+
+        for result in results:
+            scores = await _score_result(target.id, test_case, result)
+            rep_score_lists.append(scores)
+            overall = sum(s.score for s in scores) / len(scores) if scores else 0.0
+            rep_overall.append(overall)
+
+            for s in scores:
+                if s.metric_name == "hallucination_check":
+                    per_rep_hallucination.append(1.0 - s.score)
+                elif s.metric_name == "tool_accuracy":
+                    per_rep_tool.append(s.score)
+                elif s.metric_name == "safety":
+                    per_rep_safety.append(s.score)
+
+            if result.latency_ms > 0:
+                all_latencies.append(result.latency_ms)
+
+        case_mean, case_std = mean_and_std(rep_overall)
+        per_case_overall_scores.append(case_mean)
+        merged_scores = _average_scores_across_repetitions(rep_score_lists)
+
+        for s in merged_scores:
+            s.details = {
+                **s.details,
+                "runs": len(results),
+                "score_std": case_std,
+                "repetition_scores": [round(x, 3) for x in rep_overall],
+            }
 
         test_case_evals.append(
             TestCaseEval(
-                test_case_id=result.test_case_id,
-                test_result_id=result.id,
-                scores=scores,
-                overall_pass=overall_score >= 0.7,
-                overall_score=round(overall_score, 3),
+                test_case_id=test_case_id,
+                test_result_id=results[-1].id,
+                scores=merged_scores,
+                overall_pass=case_mean >= 0.7,
+                overall_score=round(case_mean, 3),
             )
         )
 
-    # Compute aggregate metrics
-    all_scores = [e.overall_score for e in test_case_evals]
-    overall_score = statistics.mean(all_scores) if all_scores else 0.0
-
-    # Hallucination rate: ratio of results flagged for hallucination
-    hallucination_scores = []
-    for e in test_case_evals:
-        for s in e.scores:
-            if s.metric_name == "hallucination_check":
-                hallucination_scores.append(1.0 - s.score)
-    hallucination_rate = (
-        statistics.mean(hallucination_scores) if hallucination_scores else 0.0
+    overall_score, overall_score_std = mean_and_std(per_case_overall_scores)
+    hallucination_rate, hallucination_rate_std = mean_and_std(per_rep_hallucination)
+    tool_accuracy, tool_accuracy_std = mean_and_std(per_rep_tool) if per_rep_tool else (1.0, 0.0)
+    safety_pass_rate, safety_pass_rate_std = mean_and_std(per_rep_safety) if per_rep_safety else (
+        1.0,
+        0.0,
     )
 
-    # Tool accuracy
-    tool_scores = []
-    for e in test_case_evals:
-        for s in e.scores:
-            if s.metric_name == "tool_accuracy":
-                tool_scores.append(s.score)
-    tool_accuracy = statistics.mean(tool_scores) if tool_scores else 0.0
-
-    # Safety pass rate
-    safety_scores = []
-    for e in test_case_evals:
-        for s in e.scores:
-            if s.metric_name == "safety":
-                safety_scores.append(s.score)
-    safety_pass_rate = statistics.mean(safety_scores) if safety_scores else 1.0
-
-    # Latency stats
-    latencies = [r.latency_ms for r in run.results if r.latency_ms > 0]
-    avg_latency = statistics.mean(latencies) if latencies else 0.0
+    avg_latency = statistics.mean(all_latencies) if all_latencies else 0.0
+    _, avg_latency_std = mean_and_std(all_latencies)
     p95_latency = (
-        sorted(latencies)[int(len(latencies) * 0.95)] if latencies else 0.0
+        sorted(all_latencies)[int(len(all_latencies) * 0.95)] if all_latencies else 0.0
     )
 
-    # Scores by category
     scores_by_cat: dict[str, list[float]] = {}
     failures_by_cat: dict[str, int] = {}
     for e in test_case_evals:
@@ -107,41 +118,94 @@ async def evaluate_run(
                 failures_by_cat[cat] = failures_by_cat.get(cat, 0) + 1
 
     category_scores = {
-        cat: round(statistics.mean(scores), 3)
-        for cat, scores in scores_by_cat.items()
+        cat: round(statistics.mean(scores), 3) for cat, scores in scores_by_cat.items()
     }
 
-    # Worst performing areas
     worst = sorted(category_scores.items(), key=lambda x: x[1])[:3]
     worst_areas = [f"{cat} ({score:.0%})" for cat, score in worst if score < 0.8]
 
-    # Recommendations
+    ci = {
+        "overall_score": confidence_interval(per_case_overall_scores),
+        "hallucination_rate": confidence_interval(per_rep_hallucination),
+        "tool_accuracy": confidence_interval(per_rep_tool),
+        "safety_pass_rate": confidence_interval(per_rep_safety),
+        "avg_latency_ms": confidence_interval(all_latencies),
+    }
+
+    unique_cases = len(grouped)
+    passed_cases = sum(1 for e in test_case_evals if e.overall_pass)
+    failed_cases = unique_cases - passed_cases
+    error_results = sum(1 for r in run.results if r.status == TestStatus.ERROR)
+
     recommendations = _generate_recommendations(
         overall_score, hallucination_rate, tool_accuracy, safety_pass_rate, worst_areas
     )
+    if runs > 1:
+        recommendations.insert(
+            0,
+            f"Multi-run evaluation ({runs} repetitions per test, seed={seed}): "
+            f"overall score {overall_score:.1%} ± {overall_score_std:.1%} "
+            f"(95% CI {ci['overall_score']['ci_low']:.1%}–{ci['overall_score']['ci_high']:.1%}).",
+        )
 
     return QualityReport(
         run_id=run.id,
         target_id=target.id,
         target_name=target.name,
+        runs=runs,
+        seed=seed,
         overall_score=round(overall_score, 3),
+        overall_score_std=round(overall_score_std, 3),
         hallucination_rate=round(hallucination_rate, 3),
+        hallucination_rate_std=round(hallucination_rate_std, 3),
         tool_accuracy=round(tool_accuracy, 3),
+        tool_accuracy_std=round(tool_accuracy_std, 3),
         safety_pass_rate=round(safety_pass_rate, 3),
+        safety_pass_rate_std=round(safety_pass_rate_std, 3),
         avg_latency_ms=round(avg_latency, 1),
+        avg_latency_ms_std=round(avg_latency_std, 1),
         p95_latency_ms=round(p95_latency, 1),
+        confidence_interval=ci,
         total_cost_usd=round(run.total_cost_usd, 4),
         total_tokens=run.total_tokens,
-        total_tests=len(run.results),
-        passed_tests=run.passed,
-        failed_tests=run.failed,
-        error_tests=run.error_count,
+        total_tests=unique_cases,
+        passed_tests=passed_cases,
+        failed_tests=failed_cases,
+        error_tests=error_results,
         scores_by_category=category_scores,
         failures_by_category=failures_by_cat,
         worst_performing_areas=worst_areas,
         recommendations=recommendations,
         test_case_evals=test_case_evals,
     )
+
+
+def _average_scores_across_repetitions(
+    rep_score_lists: list[list[EvalScore]],
+) -> list[EvalScore]:
+    """Average each metric's score across repetitions."""
+    if not rep_score_lists:
+        return []
+    if len(rep_score_lists) == 1:
+        return rep_score_lists[0]
+
+    by_metric: dict[str, list[EvalScore]] = defaultdict(list)
+    for score_list in rep_score_lists:
+        for s in score_list:
+            by_metric[s.metric_name].append(s)
+
+    merged: list[EvalScore] = []
+    for metric_name, scores in by_metric.items():
+        avg_score = statistics.mean(s.score for s in scores)
+        merged.append(
+            EvalScore(
+                metric_name=metric_name,
+                score=round(avg_score, 3),
+                reasoning=scores[0].reasoning,
+                details=scores[0].details,
+            )
+        )
+    return merged
 
 
 async def _score_result(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import time
 from datetime import datetime, timezone
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 from agentprobe.connectors.api_connector import APIConnector
 from agentprobe.connectors.base import BaseConnector
 from agentprobe.connectors.mcp_connector import MCPConnector
+from agentprobe.connectors.ollama_connector import OllamaConnector
 from agentprobe.probe.models import (
     ConnectorType,
     TargetProfile,
@@ -21,11 +23,28 @@ from agentprobe.probe.models import (
     ToolCallRecord,
 )
 
+DEFAULT_TEMPERATURE = 0.7
+
+
+def resolve_temperature(runs: int, temperature: float) -> float:
+    """Ensure multi-run probes use non-zero temperature for meaningful variance."""
+    if runs > 1 and temperature == 0:
+        print(
+            "Warning: --runs > 1 with temperature=0 will produce identical repetitions. "
+            "Setting temperature to 0.7.",
+            file=sys.stderr,
+        )
+        return DEFAULT_TEMPERATURE
+    return temperature
+
 
 async def execute_test_run(
     plan: TestPlan,
     target: TargetProfile,
     max_concurrent: int = 5,
+    runs: int = 1,
+    seed: int | None = None,
+    temperature: float = DEFAULT_TEMPERATURE,
 ) -> TestRun:
     """Execute all test cases in a plan against the target agent.
 
@@ -33,10 +52,15 @@ async def execute_test_run(
         plan: The test plan containing test cases to execute
         target: The target agent profile
         max_concurrent: Maximum number of concurrent test executions
+        runs: Execute each test case this many times (different seeds per repetition)
+        seed: Base random seed; repetition *i* uses ``seed + i`` when set
+        temperature: Sampling temperature for targets that support it (e.g. Ollama)
 
     Returns:
         TestRun with all results populated
     """
+    runs = max(1, runs)
+    temperature = resolve_temperature(runs, temperature)
     run = TestRun(
         plan_id=plan.id,
         target_id=target.id,
@@ -53,8 +77,17 @@ async def execute_test_run(
         # Execute tests with concurrency limit
         semaphore = asyncio.Semaphore(max_concurrent)
         tasks = [
-            _execute_single_test(connector, test_case, run.id, semaphore)
+            _execute_single_test(
+                connector,
+                test_case,
+                run.id,
+                semaphore,
+                repetition=rep,
+                seed=(seed + rep) if seed is not None else None,
+                temperature=temperature,
+            )
             for test_case in plan.test_cases
+            for rep in range(runs)
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -105,17 +138,25 @@ async def _execute_single_test(
     test_case: TestCase,
     run_id: str,
     semaphore: asyncio.Semaphore,
+    repetition: int = 0,
+    seed: int | None = None,
+    temperature: float = DEFAULT_TEMPERATURE,
 ) -> TestResult:
     """Execute a single test case and return the result."""
     async with semaphore:
         result = TestResult(
             test_case_id=test_case.id,
             run_id=run_id,
+            repetition=repetition,
+            seed=seed,
             started_at=datetime.now(timezone.utc),
         )
 
         try:
-            response = await connector.invoke(test_case.input_prompt)
+            invoke_kwargs: dict[str, Any] = {"temperature": temperature}
+            if seed is not None:
+                invoke_kwargs["seed"] = seed
+            response = await connector.invoke(test_case.input_prompt, **invoke_kwargs)
 
             result.response_text = response.get("response_text", "")
             result.latency_ms = response.get("latency_ms", 0.0)
@@ -172,11 +213,17 @@ def _create_connector(target: TargetProfile) -> BaseConnector:
             name=target.name,
             auth_token=target.metadata.get("auth_token", ""),
         )
-    else:
-        return APIConnector(
+    if target.connector_type == ConnectorType.OLLAMA:
+        return OllamaConnector(
             url=target.url,
             name=target.name,
-            auth_token=target.metadata.get("auth_token", ""),
-            chat_endpoint=target.metadata.get("chat_endpoint", "/chat"),
-            tools_endpoint=target.metadata.get("tools_endpoint", "/tools"),
+            model=target.metadata.get("model", ""),
+            temperature=float(target.metadata.get("temperature", DEFAULT_TEMPERATURE)),
         )
+    return APIConnector(
+        url=target.url,
+        name=target.name,
+        auth_token=target.metadata.get("auth_token", ""),
+        chat_endpoint=target.metadata.get("chat_endpoint", "/chat"),
+        tools_endpoint=target.metadata.get("tools_endpoint", "/tools"),
+    )

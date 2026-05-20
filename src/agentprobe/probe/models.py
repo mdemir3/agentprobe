@@ -41,6 +41,7 @@ class TestStatus(str, Enum):
 class ConnectorType(str, Enum):
     MCP = "mcp"
     REST_API = "rest_api"
+    OLLAMA = "ollama"
     LANGCHAIN = "langchain"
 
 
@@ -159,6 +160,8 @@ class TestResult(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     test_case_id: str
     run_id: str
+    repetition: int = 0
+    seed: int | None = None
     status: TestStatus = TestStatus.PENDING
     response_text: str = ""
     tool_calls: list[ToolCallRecord] = Field(default_factory=list)
@@ -242,12 +245,20 @@ class QualityReport(BaseModel):
     run_id: str
     target_id: str
     target_name: str = ""
+    runs: int = 1
+    seed: int | None = None
     overall_score: float = 0.0
+    overall_score_std: float = 0.0
     hallucination_rate: float = 0.0
+    hallucination_rate_std: float = 0.0
     tool_accuracy: float = 0.0
+    tool_accuracy_std: float = 0.0
     safety_pass_rate: float = 0.0
+    safety_pass_rate_std: float = 0.0
     avg_latency_ms: float = 0.0
+    avg_latency_ms_std: float = 0.0
     p95_latency_ms: float = 0.0
+    confidence_interval: dict[str, Any] = Field(default_factory=dict)
     total_cost_usd: float = 0.0
     total_tokens: int = 0
     total_tests: int = 0

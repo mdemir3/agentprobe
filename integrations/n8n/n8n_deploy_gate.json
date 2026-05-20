@@ -1,0 +1,188 @@
+{
+  "name": "AgentProbe - Deployment Quality Gate",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "agentprobe-deploy",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Deployment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "agentprobe-deploy"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/targets/",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.body.agent_url || 'http://localhost:8001' }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.body.agent_name || 'Deployed Agent' }}"
+            },
+            {
+              "name": "connector_type",
+              "value": "api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Register Target",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/plans/",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "max_cases",
+              "value": "={{ $json.body?.max_cases || 15 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Generate Plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/runs/",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "plan_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Run Tests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/reports/{{ $json.id }}",
+        "method": "POST",
+        "options": {}
+      },
+      "name": "Evaluate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "threshold",
+              "leftValue": "={{ $json.overall_score }}",
+              "rightValue": "={{ $json.body?.threshold || 0.7 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Meets Threshold?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"passed\",\n  \"grade\": \"{{ $json.grade }}\",\n  \"score\": {{ $json.overall_score }},\n  \"hallucination_rate\": {{ $json.hallucination_rate }},\n  \"tool_accuracy\": {{ $json.tool_accuracy }},\n  \"message\": \"Quality gate passed. Deploy approved.\",\n  \"report_url\": \"http://localhost:3000/reports/{{ $json.id }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond - Deploy OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"failed\",\n  \"grade\": \"{{ $json.grade }}\",\n  \"score\": {{ $json.overall_score }},\n  \"hallucination_rate\": {{ $json.hallucination_rate }},\n  \"tool_accuracy\": {{ $json.tool_accuracy }},\n  \"message\": \"Quality gate FAILED. Deployment blocked.\",\n  \"recommendations\": {{ JSON.stringify($json.recommendations) }},\n  \"report_url\": \"http://localhost:3000/reports/{{ $json.id }}\"\n}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "name": "Respond - Deploy Blocked",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "Deployment Webhook": {
+      "main": [
+        [{"node": "Register Target", "type": "main", "index": 0}]
+      ]
+    },
+    "Register Target": {
+      "main": [
+        [{"node": "Generate Plan", "type": "main", "index": 0}]
+      ]
+    },
+    "Generate Plan": {
+      "main": [
+        [{"node": "Run Tests", "type": "main", "index": 0}]
+      ]
+    },
+    "Run Tests": {
+      "main": [
+        [{"node": "Evaluate", "type": "main", "index": 0}]
+      ]
+    },
+    "Evaluate": {
+      "main": [
+        [{"node": "Meets Threshold?", "type": "main", "index": 0}]
+      ]
+    },
+    "Meets Threshold?": {
+      "main": [
+        [{"node": "Respond - Deploy OK", "type": "main", "index": 0}],
+        [{"node": "Respond - Deploy Blocked", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "agentprobe-deploy-gate"
+  }
+}
