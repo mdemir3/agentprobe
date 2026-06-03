@@ -9,9 +9,6 @@ Run with: python -m agentprobe.mcp_server.server
 from __future__ import annotations
 
 import json
-import os
-import asyncio
-from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -134,9 +131,9 @@ async def handle_probe_generate_plan(args: dict) -> str:
 
 async def handle_probe_run_tests(args: dict) -> str:
     from agentprobe.connectors.api_connector import APIConnector
+    from agentprobe.eval.pipeline import evaluate_run
     from agentprobe.probe.planner import generate_test_plan
     from agentprobe.probe.runner import execute_test_run
-    from agentprobe.eval.pipeline import evaluate_run
 
     url = args["target_url"]
     name = args.get("target_name", url)

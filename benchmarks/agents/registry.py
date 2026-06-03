@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 from dataclasses import dataclass
 
-from benchmarks.agents._common import AgentProfile
+from benchmarks.agents._common import AgentProfile, create_benchmark_app
 
 # Port assignments for local benchmark runs
 BASE_PORT = 8101

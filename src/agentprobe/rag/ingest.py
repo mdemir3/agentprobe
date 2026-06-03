@@ -17,7 +17,6 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 from chromadb.utils import embedding_functions
 
-
 # ─── Data models ─────────────────────────────────────────────────────────────
 
 

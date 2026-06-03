@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from agentprobe.connectors.api_connector import APIConnector
@@ -65,7 +64,7 @@ async def execute_test_run(
         plan_id=plan.id,
         target_id=target.id,
         status=TestStatus.RUNNING,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
     )
 
     # Create connector based on target type
@@ -118,7 +117,7 @@ async def execute_test_run(
         await connector.disconnect()
 
     # Compute aggregates
-    run.completed_at = datetime.now(timezone.utc)
+    run.completed_at = datetime.now(UTC)
     run.total_cost_usd = sum(r.cost_usd for r in run.results)
     run.total_tokens = sum(r.total_tokens for r in run.results)
 
@@ -149,7 +148,7 @@ async def _execute_single_test(
             run_id=run_id,
             repetition=repetition,
             seed=seed,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
 
         try:
@@ -186,7 +185,7 @@ async def _execute_single_test(
             result.status = TestStatus.ERROR
             result.error_message = str(e)
 
-        result.completed_at = datetime.now(timezone.utc)
+        result.completed_at = datetime.now(UTC)
         return result
 
 

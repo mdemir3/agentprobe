@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from agentprobe.api.routes import health, targets, plans, runs, reports
+from agentprobe.api.routes import health, plans, reports, runs, targets
 
 
 @asynccontextmanager

@@ -21,20 +21,20 @@ import multiprocessing
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Repository root on sys.path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from benchmarks.agents.registry import AGENTS, AGENT_BY_ID  # noqa: E402
-from benchmarks.lib.heuristic_judge import load_corpus_text, score_response  # noqa: E402
 from agentprobe.connectors.api_connector import APIConnector  # noqa: E402
 from agentprobe.eval.pipeline import evaluate_run  # noqa: E402
 from agentprobe.probe.planner import generate_test_plan  # noqa: E402
 from agentprobe.probe.runner import execute_test_run  # noqa: E402
 from agentprobe.rag.ingest import DocumentIngestor  # noqa: E402
+from benchmarks.agents.registry import AGENT_BY_ID, AGENTS  # noqa: E402
+from benchmarks.lib.heuristic_judge import load_corpus_text, score_response  # noqa: E402
 
 RESULTS_DIR = Path(__file__).parent / "results"
 CHROMA_DIR = RESULTS_DIR / "chromadb"
@@ -145,7 +145,7 @@ async def _run_single(
         "corpus_id": corpus_id,
         "target_id": tid,
         "url": url,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "plan_cases": plan.total_cases,
         "report": report.model_dump(mode="json"),
         "heuristic_hallucination_rate": round(avg_heuristic_hallucination, 3),
@@ -197,7 +197,7 @@ async def run_all(max_cases: int, skip_ingest: bool) -> list[dict]:
                 _stop_agent(proc)
 
     summary = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "agents": [a.agent_id for a in AGENTS],
         "corpora": [c[0] for c in CORPORA],
         "max_cases": max_cases,

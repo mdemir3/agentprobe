@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ─── Enums ───────────────────────────────────────────────────────────────────
 
@@ -76,7 +75,7 @@ class TargetProfile(BaseModel):
     description: str = ""
     tools: list[ToolSchema] = Field(default_factory=list)
     resources: list[ResourceSchema] = Field(default_factory=list)
-    discovered_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    discovered_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @property
@@ -115,7 +114,7 @@ class TestCase(BaseModel):
     tool_args_expected: dict[str, Any] | None = None
     risk_level: RiskLevel = RiskLevel.MEDIUM
     tags: list[str] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class TestPlan(BaseModel):
@@ -126,7 +125,7 @@ class TestPlan(BaseModel):
     name: str
     description: str = ""
     test_cases: list[TestCase] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     ground_truth_docs: list[str] = Field(default_factory=list)
 
     @property
@@ -270,7 +269,7 @@ class QualityReport(BaseModel):
     worst_performing_areas: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     test_case_evals: list[TestCaseEval] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def pass_rate(self) -> float:

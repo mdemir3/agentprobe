@@ -5,8 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from agentprobe.api.store import Store
-from agentprobe.probe.models import QualityReport
 from agentprobe.eval.pipeline import evaluate_run
+from agentprobe.probe.models import QualityReport
 
 router = APIRouter()
 

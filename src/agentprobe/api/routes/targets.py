@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from agentprobe.api.store import Store
 from agentprobe.connectors.api_connector import APIConnector
 from agentprobe.connectors.mcp_connector import MCPConnector
-from agentprobe.probe.models import ConnectorType, TargetProfile
+from agentprobe.probe.models import TargetProfile
 
 router = APIRouter()
 

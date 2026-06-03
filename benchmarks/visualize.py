@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import statistics
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+
+
 def _require_matplotlib():
     try:
         import matplotlib  # noqa: F401
@@ -181,7 +183,7 @@ def write_report(
     lines = [
         "# AgentProbe Benchmark Report",
         "",
-        f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}  ",
+        f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}  ",
         f"**Matrix:** {len(agg)} agents × {len({r['corpus_id'] for r in results})} RAG corpora  ",
         f"**Runs:** {len(results)} probe executions  ",
         "",

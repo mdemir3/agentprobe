@@ -2,57 +2,102 @@
 
 from __future__ import annotations
 
+import math
 import statistics
 from typing import Any
 
-# Two-tailed t critical values for 95% CI (df = n-1), stdlib-only fallback
-_T_CRIT_95: dict[int, float] = {
-    1: 12.706,
-    2: 4.303,
-    3: 3.182,
-    4: 2.776,
-    5: 2.571,
-    6: 2.447,
-    7: 2.365,
-    8: 2.306,
-    9: 2.262,
-    10: 2.228,
-    15: 2.131,
-    20: 2.086,
-    25: 2.060,
-    30: 2.042,
-}
+from scipy import stats as scipy_stats
+
+_SCORE_BOUNDS = (0.0, 1.0)
 
 
-def _t_critical(df: int, confidence_level: float) -> float:
-    if df <= 0:
-        return 0.0
-    if confidence_level >= 0.99:
-        # Conservative wide interval for small samples
-        table = {1: 63.657, 2: 9.925, 3: 5.841, 5: 4.032, 10: 3.169, 30: 2.750}
-    else:
-        table = _T_CRIT_95
-    if df in table:
-        return table[df]
-    if df < 30:
-        # Linear interpolate between nearest tabulated dfs
-        keys = sorted(k for k in table if k <= df)
-        if not keys:
-            return table[min(table)]
-        lo = keys[-1]
-        hi = min((k for k in table if k > df), default=30)
-        if lo == hi:
-            return table[lo]
-        frac = (df - lo) / (hi - lo)
-        return table[lo] + frac * (table[hi] - table[lo])
-    return 1.96 if confidence_level >= 0.95 else 1.645
+def _clip_score_bounds(ci_low: float, ci_high: float) -> tuple[float, float]:
+    lo, hi = _SCORE_BOUNDS
+    return max(lo, min(hi, ci_low)), max(lo, min(hi, ci_high))
+
+
+def wilson_interval(
+    successes: int,
+    trials: int,
+    confidence: float = 0.95,
+) -> dict[str, Any]:
+    """Wilson score interval for a binomial proportion (successes / trials)."""
+    if trials <= 0:
+        return {
+            "mean": 0.0,
+            "std": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "method": "wilson",
+            "n": 0,
+        }
+
+    p_hat = successes / trials
+    ci_low, ci_high = _wilson_bounds(p_hat, trials, confidence)
+
+    return {
+        "mean": round(p_hat, 4),
+        "std": 0.0,
+        "ci_low": round(ci_low, 4),
+        "ci_high": round(ci_high, 4),
+        "method": "wilson",
+        "n": trials,
+    }
+
+
+def _wilson_bounds(p_hat: float, n: int, confidence: float) -> tuple[float, float]:
+    if n <= 0:
+        return 0.0, 0.0
+    if n == 1:
+        return _clip_score_bounds(p_hat, p_hat)
+
+    z = scipy_stats.norm.ppf(0.5 + confidence / 2.0)
+    z2 = z * z
+    denom = 1.0 + z2 / n
+    center = (p_hat + z2 / (2.0 * n)) / denom
+    margin = (z / denom) * math.sqrt(
+        (p_hat * (1.0 - p_hat) / n) + z2 / (4.0 * n * n)
+    )
+    return _clip_score_bounds(center - margin, center + margin)
+
+
+def proportion_confidence_interval(
+    per_case_values: list[float],
+    confidence: float = 0.95,
+) -> dict[str, Any]:
+    """Wilson CI using the mean of per-case rates as p_hat and n = number of cases."""
+    n = len(per_case_values)
+    if n == 0:
+        return {
+            "mean": 0.0,
+            "std": 0.0,
+            "ci_low": 0.0,
+            "ci_high": 0.0,
+            "method": "wilson",
+            "n": 0,
+        }
+
+    mean = statistics.mean(per_case_values)
+    std = statistics.stdev(per_case_values) if n > 1 else 0.0
+    ci_low, ci_high = _wilson_bounds(mean, n, confidence)
+
+    return {
+        "mean": round(mean, 4),
+        "std": std,
+        "ci_low": round(ci_low, 4),
+        "ci_high": round(ci_high, 4),
+        "method": "wilson",
+        "n": n,
+    }
 
 
 def confidence_interval(
     values: list[float],
-    confidence_level: float = 0.95,
+    confidence: float = 0.95,
+    *,
+    clip_bounds: tuple[float, float] | None = _SCORE_BOUNDS,
 ) -> dict[str, Any]:
-    """Mean, sample std, and two-sided confidence interval."""
+    """Mean, sample std, and two-sided t-based CI (df = n - 1)."""
     n = len(values)
     if n == 0:
         return {
@@ -60,28 +105,42 @@ def confidence_interval(
             "std": 0.0,
             "ci_low": 0.0,
             "ci_high": 0.0,
-            "confidence_level": confidence_level,
+            "method": "t",
             "n": 0,
         }
+
     mean = statistics.mean(values)
     if n == 1:
+        ci_low, ci_high = mean, mean
+        if clip_bounds is not None:
+            ci_low, ci_high = _clip_score_bounds(ci_low, ci_high)
         return {
             "mean": round(mean, 4),
             "std": 0.0,
-            "ci_low": round(mean, 4),
-            "ci_high": round(mean, 4),
-            "confidence_level": confidence_level,
+            "ci_low": round(ci_low, 6),
+            "ci_high": round(ci_high, 6),
+            "method": "t",
             "n": 1,
         }
+
     std = statistics.stdev(values)
-    tcrit = _t_critical(n - 1, confidence_level)
-    margin = tcrit * std / (n**0.5)
+    if std == 0.0:
+        ci_low, ci_high = mean, mean
+    else:
+        alpha = 1.0 - confidence
+        tcrit = scipy_stats.t.ppf(1.0 - alpha / 2.0, df=n - 1)
+        margin = tcrit * std / math.sqrt(n)
+        ci_low, ci_high = mean - margin, mean + margin
+
+    if clip_bounds is not None:
+        ci_low, ci_high = _clip_score_bounds(ci_low, ci_high)
+
     return {
         "mean": round(mean, 4),
-        "std": round(std, 4),
-        "ci_low": round(mean - margin, 4),
-        "ci_high": round(mean + margin, 4),
-        "confidence_level": confidence_level,
+        "std": std,
+        "ci_low": round(ci_low, 6),
+        "ci_high": round(ci_high, 6),
+        "method": "t",
         "n": n,
     }
 

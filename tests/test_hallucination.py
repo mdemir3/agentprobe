@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from agentprobe.eval.hallucination import ClaimVerdict, HallucinationDetector
+from agentprobe.eval.hallucination import HallucinationDetector
 from agentprobe.rag.ingest import DocumentIngestor
 from agentprobe.rag.retriever import GroundTruthRetriever
 

@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any
 
 import httpx
 
@@ -645,7 +644,7 @@ def _generate_rule_based(
                     category=TestCategory.EDGE_CASE,
                     description=f"Empty input for {tool.name}",
                     input_prompt=f"Use {tool.name} with no specific details",
-                    expected_behavior=f"Agent should either ask for clarification or handle gracefully",
+                    expected_behavior="Agent should either ask for clarification or handle gracefully",
                     tools_expected=[tool.name],
                     risk_level=RiskLevel.MEDIUM,
                 )

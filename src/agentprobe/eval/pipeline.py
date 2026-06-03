@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import statistics
 from collections import defaultdict
-from typing import Any
 
-from agentprobe.eval.stats import confidence_interval, mean_and_std
+from agentprobe.eval.stats import (
+    confidence_interval,
+    mean_and_std,
+    proportion_confidence_interval,
+)
 from agentprobe.probe.models import (
     EvalScore,
     QualityReport,
@@ -44,15 +47,19 @@ async def evaluate_run(
 
     test_case_evals: list[TestCaseEval] = []
     per_case_overall_scores: list[float] = []
-    per_rep_hallucination: list[float] = []
-    per_rep_tool: list[float] = []
-    per_rep_safety: list[float] = []
-    all_latencies: list[float] = []
+    per_case_hallucination: list[float] = []
+    per_case_tool: list[float] = []
+    per_case_safety: list[float] = []
+    per_case_latency: list[float] = []
 
     for test_case_id, results in grouped.items():
         test_case = case_map[test_case_id]
         rep_overall: list[float] = []
         rep_score_lists: list[list[EvalScore]] = []
+        rep_hallucination: list[float] = []
+        rep_tool: list[float] = []
+        rep_safety: list[float] = []
+        rep_latencies: list[float] = []
 
         for result in results:
             scores = await _score_result(target.id, test_case, result)
@@ -62,17 +69,26 @@ async def evaluate_run(
 
             for s in scores:
                 if s.metric_name == "hallucination_check":
-                    per_rep_hallucination.append(1.0 - s.score)
+                    rep_hallucination.append(1.0 - s.score)
                 elif s.metric_name == "tool_accuracy":
-                    per_rep_tool.append(s.score)
+                    rep_tool.append(s.score)
                 elif s.metric_name == "safety":
-                    per_rep_safety.append(s.score)
+                    rep_safety.append(s.score)
 
             if result.latency_ms > 0:
-                all_latencies.append(result.latency_ms)
+                rep_latencies.append(result.latency_ms)
 
         case_mean, case_std = mean_and_std(rep_overall)
         per_case_overall_scores.append(case_mean)
+        if rep_hallucination:
+            per_case_hallucination.append(statistics.mean(rep_hallucination))
+        if rep_tool:
+            per_case_tool.append(statistics.mean(rep_tool))
+        if rep_safety:
+            per_case_safety.append(statistics.mean(rep_safety))
+        if rep_latencies:
+            per_case_latency.append(statistics.mean(rep_latencies))
+
         merged_scores = _average_scores_across_repetitions(rep_score_lists)
 
         for s in merged_scores:
@@ -94,17 +110,23 @@ async def evaluate_run(
         )
 
     overall_score, overall_score_std = mean_and_std(per_case_overall_scores)
-    hallucination_rate, hallucination_rate_std = mean_and_std(per_rep_hallucination)
-    tool_accuracy, tool_accuracy_std = mean_and_std(per_rep_tool) if per_rep_tool else (1.0, 0.0)
-    safety_pass_rate, safety_pass_rate_std = mean_and_std(per_rep_safety) if per_rep_safety else (
-        1.0,
-        0.0,
+    hallucination_rate, hallucination_rate_std = (
+        mean_and_std(per_case_hallucination) if per_case_hallucination else (0.0, 0.0)
+    )
+    tool_accuracy, tool_accuracy_std = (
+        mean_and_std(per_case_tool) if per_case_tool else (1.0, 0.0)
+    )
+    safety_pass_rate, safety_pass_rate_std = (
+        mean_and_std(per_case_safety) if per_case_safety else (1.0, 0.0)
     )
 
-    avg_latency = statistics.mean(all_latencies) if all_latencies else 0.0
-    _, avg_latency_std = mean_and_std(all_latencies)
+    avg_latency = statistics.mean(per_case_latency) if per_case_latency else 0.0
+    _, avg_latency_std = mean_and_std(per_case_latency)
+    flat_latencies = [
+        r.latency_ms for r in run.results if r.latency_ms > 0
+    ]
     p95_latency = (
-        sorted(all_latencies)[int(len(all_latencies) * 0.95)] if all_latencies else 0.0
+        sorted(flat_latencies)[int(len(flat_latencies) * 0.95)] if flat_latencies else 0.0
     )
 
     scores_by_cat: dict[str, list[float]] = {}
@@ -126,10 +148,13 @@ async def evaluate_run(
 
     ci = {
         "overall_score": confidence_interval(per_case_overall_scores),
-        "hallucination_rate": confidence_interval(per_rep_hallucination),
-        "tool_accuracy": confidence_interval(per_rep_tool),
-        "safety_pass_rate": confidence_interval(per_rep_safety),
-        "avg_latency_ms": confidence_interval(all_latencies),
+        "hallucination_rate": proportion_confidence_interval(per_case_hallucination),
+        "tool_accuracy": proportion_confidence_interval(per_case_tool),
+        "safety_pass_rate": proportion_confidence_interval(per_case_safety),
+        "avg_latency_ms": confidence_interval(
+            per_case_latency,
+            clip_bounds=None,
+        ),
     }
 
     unique_cases = len(grouped)

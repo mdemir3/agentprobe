@@ -5,9 +5,7 @@ Run with: uvicorn examples.dummy_tool_agent.app:app --port 8001
 
 from __future__ import annotations
 
-import random
 import re
-from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from pydantic import BaseModel

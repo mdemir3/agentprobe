@@ -46,6 +46,7 @@ dependencies = [
     "tiktoken>=0.8.0",
     "sentence-transformers>=3.0.0",
     "pypdf>=5.0.0",
+    "scipy>=1.11.0",
 ]
 
 [project.optional-dependencies]

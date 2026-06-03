@@ -30,7 +30,6 @@ from agentprobe.eval.pipeline import evaluate_run
 from agentprobe.probe.planner import generate_test_plan
 from agentprobe.probe.runner import execute_test_run
 
-
 DUMMY_AGENT_URL = "http://127.0.0.1:8001"
 
 
@@ -71,12 +70,31 @@ def _run_dummy_agent():
     uvicorn.run(app, host="127.0.0.1", port=8001, log_level="error")
 
 
+def _wait_until_ready(url: str, timeout: float = 20.0) -> bool:
+    """Poll the agent's health endpoint until it responds or times out."""
+    import httpx
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            resp = httpx.get(f"{url}/health", timeout=1.0)
+            if resp.status_code < 500:
+                return True
+        except httpx.HTTPError:
+            pass
+        time.sleep(0.25)
+    return False
+
+
 @pytest.fixture(scope="module")
 def dummy_agent():
     """Start the dummy agent server for the test session."""
     proc = multiprocessing.Process(target=_run_dummy_agent, daemon=True)
     proc.start()
-    time.sleep(2)  # Wait for startup
+    if not _wait_until_ready(DUMMY_AGENT_URL):
+        proc.terminate()
+        proc.join(timeout=3)
+        pytest.fail(f"Dummy agent did not become ready at {DUMMY_AGENT_URL}")
     yield
     proc.terminate()
     proc.join(timeout=3)
