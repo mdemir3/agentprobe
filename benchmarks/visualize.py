@@ -36,9 +36,15 @@ def _agent_aggregate(results: list[dict]) -> dict[str, dict[str, float]]:
                 r.get("heuristic_hallucination_rate", r["report"]["hallucination_rate"])
                 for r in rows
             ),
-            "tool_accuracy": statistics.mean(r["report"]["tool_accuracy"] for r in rows),
-            "overall_score": statistics.mean(r["report"]["overall_score"] for r in rows),
-            "avg_latency_ms": statistics.mean(r["report"]["avg_latency_ms"] for r in rows),
+            "tool_accuracy": statistics.mean(
+                r["report"]["tool_accuracy"] for r in rows
+            ),
+            "overall_score": statistics.mean(
+                r["report"]["overall_score"] for r in rows
+            ),
+            "avg_latency_ms": statistics.mean(
+                r["report"]["avg_latency_ms"] for r in rows
+            ),
             "display_name": rows[0]["agent_name"],
         }
     return agg
@@ -141,7 +147,11 @@ def generate_charts(results: list[dict], charts_dir: Path) -> dict[str, Path]:
         row_scores = []
         for corpus in corpora:
             match = next(
-                (r for r in results if r["agent_id"] == agent_id and r["corpus_id"] == corpus),
+                (
+                    r
+                    for r in results
+                    if r["agent_id"] == agent_id and r["corpus_id"] == corpus
+                ),
                 None,
             )
             row_scores.append(match["report"]["overall_score"] * 100 if match else 0)
@@ -157,7 +167,13 @@ def generate_charts(results: list[dict], charts_dir: Path) -> dict[str, Path]:
     for i in range(len(agents)):
         for j in range(len(corpora)):
             ax.text(
-                j, i, f"{matrix[i][j]:.0f}", ha="center", va="center", color="black", fontsize=9
+                j,
+                i,
+                f"{matrix[i][j]:.0f}",
+                ha="center",
+                va="center",
+                color="black",
+                fontsize=9,
             )
     fig.colorbar(im, ax=ax, label="Score %")
     fig.tight_layout()
@@ -250,7 +266,9 @@ def write_report(
             "## Full matrix (overall score)",
             "",
             "| Agent | " + " | ".join(sorted({r["corpus_id"] for r in results})) + " |",
-            "|-------|" + "|".join(["------"] * len({r["corpus_id"] for r in results})) + "|",
+            "|-------|"
+            + "|".join(["------"] * len({r["corpus_id"] for r in results}))
+            + "|",
         ]
     )
 
@@ -259,7 +277,11 @@ def write_report(
         cells = []
         for corpus in corpora:
             match = next(
-                (r for r in results if r["agent_id"] == agent_id and r["corpus_id"] == corpus),
+                (
+                    r
+                    for r in results
+                    if r["agent_id"] == agent_id and r["corpus_id"] == corpus
+                ),
                 None,
             )
             cells.append(f"{match['report']['overall_score']:.1%}" if match else "—")
@@ -288,7 +310,9 @@ def main() -> None:
     results_dir = Path(__file__).parent / "results"
     summary_path = results_dir / "summary.json"
     if not summary_path.exists():
-        raise SystemExit(f"No results found at {summary_path}. Run run_benchmark.py first.")
+        raise SystemExit(
+            f"No results found at {summary_path}. Run run_benchmark.py first."
+        )
 
     data = json.loads(summary_path.read_text(encoding="utf-8"))
     results: list[dict] = data["cells"]

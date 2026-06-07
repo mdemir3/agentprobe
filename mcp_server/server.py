@@ -36,7 +36,10 @@ TOOLS = [
                     "type": "string",
                     "description": "URL of the target agent (e.g., http://localhost:8001)",
                 },
-                "name": {"type": "string", "description": "Friendly name for the target agent"},
+                "name": {
+                    "type": "string",
+                    "description": "Friendly name for the target agent",
+                },
                 "connector_type": {
                     "type": "string",
                     "enum": ["api", "mcp"],
@@ -56,7 +59,10 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "target_url": {"type": "string", "description": "URL of the target agent to test"},
+                "target_url": {
+                    "type": "string",
+                    "description": "URL of the target agent to test",
+                },
                 "max_cases": {
                     "type": "integer",
                     "description": "Maximum number of test cases to generate (default: 20)",
@@ -75,8 +81,14 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "target_url": {"type": "string", "description": "URL of the target agent to test"},
-                "target_name": {"type": "string", "description": "Name of the target agent"},
+                "target_url": {
+                    "type": "string",
+                    "description": "URL of the target agent to test",
+                },
+                "target_name": {
+                    "type": "string",
+                    "description": "Name of the target agent",
+                },
                 "max_cases": {
                     "type": "integer",
                     "description": "Number of test cases (default: 15)",
@@ -94,8 +106,14 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "target_url": {"type": "string", "description": "URL of the target agent"},
-                "prompt": {"type": "string", "description": "The prompt to send to the agent"},
+                "target_url": {
+                    "type": "string",
+                    "description": "URL of the target agent",
+                },
+                "prompt": {
+                    "type": "string",
+                    "description": "The prompt to send to the agent",
+                },
             },
             "required": ["target_url", "prompt"],
         },
@@ -124,7 +142,9 @@ async def handle_probe_connect(args: dict) -> str:
             "name": profile.name,
             "url": profile.url,
             "tools_discovered": len(profile.tools),
-            "tools": [{"name": t.name, "description": t.description} for t in profile.tools],
+            "tools": [
+                {"name": t.name, "description": t.description} for t in profile.tools
+            ],
             "resources": len(profile.resources),
         },
         indent=2,
@@ -205,7 +225,9 @@ async def handle_probe_run_tests(args: dict) -> str:
             },
             "avg_latency_ms": round(report.avg_latency_ms),
             "total_cost_usd": round(report.total_cost_usd, 4),
-            "scores_by_category": {k: f"{v:.1%}" for k, v in report.scores_by_category.items()},
+            "scores_by_category": {
+                k: f"{v:.1%}" for k, v in report.scores_by_category.items()
+            },
             "worst_areas": report.worst_performing_areas,
             "recommendations": report.recommendations,
         },
@@ -226,7 +248,10 @@ async def handle_probe_quick_check(args: dict) -> str:
         {
             "response": result.get("response_text", "")[:500],
             "tool_calls": [
-                {"tool": tc.get("name", tc.get("tool_name", "")), "args": tc.get("arguments", {})}
+                {
+                    "tool": tc.get("name", tc.get("tool_name", "")),
+                    "args": tc.get("arguments", {}),
+                }
                 for tc in result.get("tool_calls", [])
             ],
             "latency_ms": round(result.get("latency_ms", 0)),
@@ -326,12 +351,18 @@ async def mcp_endpoint(request: Request):
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "agentprobe-mcp-server", "tools": len(TOOLS)}
+    return {
+        "status": "healthy",
+        "service": "agentprobe-mcp-server",
+        "tools": len(TOOLS),
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
 
     print("Starting AgentProbe MCP Server on port 9100")
-    print("Tools: probe_connect, probe_generate_plan, probe_run_tests, probe_quick_check")
+    print(
+        "Tools: probe_connect, probe_generate_plan, probe_run_tests, probe_quick_check"
+    )
     uvicorn.run(app, host="0.0.0.0", port=9100)

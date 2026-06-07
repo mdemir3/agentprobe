@@ -72,7 +72,9 @@ def _truthy(value: str | None) -> bool:
 
 def _ollama_enabled() -> bool:
     """Whether planner should prefer local Ollama generation."""
-    return _truthy(os.environ.get("AGENTPROBE_USE_OLLAMA")) or bool(os.environ.get("OLLAMA_MODEL"))
+    return _truthy(os.environ.get("AGENTPROBE_USE_OLLAMA")) or bool(
+        os.environ.get("OLLAMA_MODEL")
+    )
 
 
 def _mcp_bridge_enabled() -> bool:
@@ -133,7 +135,11 @@ async def generate_test_plan(
     """
     # Determine which categories to generate
     if categories:
-        selected = [TestCategory(c) for c in categories if c in TestCategory.__members__.values()]
+        selected = [
+            TestCategory(c)
+            for c in categories
+            if c in TestCategory.__members__.values()
+        ]
     else:
         selected = list(TestCategory)
 
@@ -212,7 +218,9 @@ async def _generate_with_anthropic(
     # Default: current Sonnet alias (see https://docs.anthropic.com/en/docs/about-claude/models/overview)
     model = os.environ.get("AGENTPROBE_DEFAULT_MODEL", "claude-sonnet-4-6")
 
-    category_text = "\n".join(f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories)
+    category_text = "\n".join(
+        f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories
+    )
     category_list = ", ".join(cat.value for cat in categories)
 
     user_prompt = PLAN_PROMPT_TEMPLATE.format(
@@ -268,7 +276,9 @@ async def _generate_with_ollama(
     )
     base_url = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
 
-    category_text = "\n".join(f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories)
+    category_text = "\n".join(
+        f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories
+    )
     category_list = ", ".join(cat.value for cat in categories)
 
     user_prompt = PLAN_PROMPT_TEMPLATE.format(
@@ -312,12 +322,16 @@ async def _generate_with_mcp_bridge(
     max_cases: int,
 ) -> list[TestCase]:
     """Generate test cases by calling an MCP tool bridge (no provider key in AgentProbe)."""
-    mcp_url = os.environ.get("AGENTPROBE_MCP_BRIDGE_URL", "http://127.0.0.1:9000").rstrip("/")
+    mcp_url = os.environ.get(
+        "AGENTPROBE_MCP_BRIDGE_URL", "http://127.0.0.1:9000"
+    ).rstrip("/")
     tool_name = os.environ.get("AGENTPROBE_MCP_BRIDGE_TOOL", "generate_test_plan")
     auth_token = os.environ.get("AGENTPROBE_MCP_BRIDGE_AUTH_TOKEN", "").strip()
     timeout_s = float(os.environ.get("AGENTPROBE_MCP_BRIDGE_TIMEOUT_SECONDS", "120"))
 
-    category_text = "\n".join(f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories)
+    category_text = "\n".join(
+        f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories
+    )
     category_list = ", ".join(cat.value for cat in categories)
     user_prompt = PLAN_PROMPT_TEMPLATE.format(
         max_cases=max_cases,
@@ -379,7 +393,9 @@ async def _generate_with_mcp_bridge(
     result = payload.get("result", {})
     content = result.get("content", [])
     text_parts = [
-        c.get("text", "") for c in content if isinstance(c, dict) and c.get("type") == "text"
+        c.get("text", "")
+        for c in content
+        if isinstance(c, dict) and c.get("type") == "text"
     ]
     text = "\n".join(p for p in text_parts if p).strip()
 
@@ -408,7 +424,9 @@ async def _generate_with_openai(
     api_key = os.environ["OPENAI_API_KEY"]
     model = os.environ.get("AGENTPROBE_CHEAP_MODEL", "gpt-4o-mini")
 
-    category_text = "\n".join(f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories)
+    category_text = "\n".join(
+        f"- {cat.value}: {CATEGORY_DESCRIPTIONS[cat]}" for cat in categories
+    )
     category_list = ", ".join(cat.value for cat in categories)
 
     user_prompt = PLAN_PROMPT_TEMPLATE.format(
@@ -690,7 +708,9 @@ def _generate_rule_based(
                     input_prompt=(
                         f"Use {tool.name} with argument value 'NOT_A_VALID_VALUE_12345'"
                     ),
-                    expected_behavior="Agent should handle invalid input gracefully without crashing",
+                    expected_behavior=(
+                        "Agent should handle invalid input gracefully without crashing"
+                    ),
                     tools_expected=[tool.name],
                     risk_level=RiskLevel.MEDIUM,
                 )

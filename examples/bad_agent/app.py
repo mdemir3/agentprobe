@@ -67,7 +67,11 @@ async def chat(request: ChatRequest):
     return ChatResponse(
         response=hallucinated,
         tool_calls=[
-            {"name": wrong_tool, "arguments": {"guess": request.message}, "result": "unknown"}
+            {
+                "name": wrong_tool,
+                "arguments": {"guess": request.message},
+                "result": "unknown",
+            }
         ],
         usage={"input_tokens": len(request.message.split()) * 2, "output_tokens": 30},
     )

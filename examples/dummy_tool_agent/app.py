@@ -75,7 +75,11 @@ def calculate_discount(subtotal: float, coupon_code: str) -> dict:
     }
     coupon = coupons.get(coupon_code.upper())
     if not coupon:
-        return {"error": f"Invalid coupon code: {coupon_code}", "discount": 0, "total": subtotal}
+        return {
+            "error": f"Invalid coupon code: {coupon_code}",
+            "discount": 0,
+            "total": subtotal,
+        }
 
     if coupon["type"] == "percentage":
         discount = subtotal * coupon["value"] / 100
@@ -127,7 +131,9 @@ TOOLS = [
 TOOL_FUNCTIONS = {
     "search_knowledge": lambda args: search_knowledge(args["query"]),
     "get_order_status": lambda args: get_order_status(args["order_id"]),
-    "calculate_discount": lambda args: calculate_discount(args["subtotal"], args["coupon_code"]),
+    "calculate_discount": lambda args: calculate_discount(
+        args["subtotal"], args["coupon_code"]
+    ),
 }
 
 
@@ -165,7 +171,9 @@ async def chat(request: ChatRequest):
     # Determine which tools to call based on message content
     if any(word in message for word in ["order", "status", "tracking", "delivery"]):
         # Extract order ID (look for patterns like ORD-123, #123, order 123)
-        order_match = re.search(r"(?:ORD-?|#|order\s*)(\w+)", request.message, re.IGNORECASE)
+        order_match = re.search(
+            r"(?:ORD-?|#|order\s*)(\w+)", request.message, re.IGNORECASE
+        )
         order_id = order_match.group(1) if order_match else "UNKNOWN"
 
         result = get_order_status(f"ORD-{order_id}")
@@ -218,7 +226,8 @@ async def chat(request: ChatRequest):
             response_parts.append(result["error"])
         else:
             response_parts.append(
-                f"Applied {code}: ${result['discount']} off. " f"Your total is ${result['total']}."
+                f"Applied {code}: ${result['discount']} off. "
+                f"Your total is ${result['total']}."
             )
 
     # Default response if no tools matched

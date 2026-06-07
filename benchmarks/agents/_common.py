@@ -142,7 +142,11 @@ def create_benchmark_app(profile: AgentProfile) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict[str, str]:
-        return {"status": "ok", "agent": profile.agent_id, "framework": profile.framework}
+        return {
+            "status": "ok",
+            "agent": profile.agent_id,
+            "framework": profile.framework,
+        }
 
     @app.get("/tools")
     def tools() -> list[dict[str, Any]]:

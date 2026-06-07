@@ -50,11 +50,16 @@ class OllamaConnector(BaseConnector):
                 f"Start it with: ollama run {self.model}\n{e}"
             ) from e
         except httpx.HTTPError as e:
-            raise ConnectionError(f"Ollama at {self.base_url} returned an error: {e}") from e
+            raise ConnectionError(
+                f"Ollama at {self.base_url} returned an error: {e}"
+            ) from e
 
         if self._available_models and self.model not in self._available_models:
             # Allow partial match (e.g. llama3.1 vs llama3.1:latest)
-            if not any(self.model in m or m.startswith(self.model) for m in self._available_models):
+            if not any(
+                self.model in m or m.startswith(self.model)
+                for m in self._available_models
+            ):
                 resolved = self._available_models[0]
                 self.model = resolved
 
@@ -117,7 +122,9 @@ class OllamaConnector(BaseConnector):
             data = resp.json()
             message = data.get("message", {})
             response_text = (
-                message.get("content", "") if isinstance(message, dict) else str(message)
+                message.get("content", "")
+                if isinstance(message, dict)
+                else str(message)
             )
             input_tokens = int(data.get("prompt_eval_count", 0))
             output_tokens = int(data.get("eval_count", 0))

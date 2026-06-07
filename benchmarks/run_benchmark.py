@@ -34,7 +34,10 @@ from agentprobe.probe.planner import generate_test_plan  # noqa: E402
 from agentprobe.probe.runner import execute_test_run  # noqa: E402
 from agentprobe.rag.ingest import DocumentIngestor  # noqa: E402
 from benchmarks.agents.registry import AGENT_BY_ID, AGENTS  # noqa: E402
-from benchmarks.lib.heuristic_judge import load_corpus_text, score_response  # noqa: E402
+from benchmarks.lib.heuristic_judge import (  # noqa: E402
+    load_corpus_text,
+    score_response,
+)
 
 RESULTS_DIR = Path(__file__).parent / "results"
 CHROMA_DIR = RESULTS_DIR / "chromadb"
@@ -126,13 +129,15 @@ async def _run_single(
     heuristic_scores = []
     for result in run.results:
         if result.response_text:
-            heuristic_scores.append(score_response(corpus_id, corpus_text, result.response_text))
+            heuristic_scores.append(
+                score_response(corpus_id, corpus_text, result.response_text)
+            )
 
     avg_heuristic_hallucination = 0.0
     if heuristic_scores:
-        avg_heuristic_hallucination = sum(s["hallucination_rate"] for s in heuristic_scores) / len(
-            heuristic_scores
-        )
+        avg_heuristic_hallucination = sum(
+            s["hallucination_rate"] for s in heuristic_scores
+        ) / len(heuristic_scores)
 
     latencies = [r.latency_ms for r in run.results if r.latency_ms > 0]
 
@@ -206,7 +211,9 @@ async def run_all(max_cases: int, skip_ingest: bool) -> list[dict]:
         "max_cases": max_cases,
         "cells": results,
     }
-    (RESULTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (RESULTS_DIR / "summary.json").write_text(
+        json.dumps(summary, indent=2), encoding="utf-8"
+    )
     return results
 
 

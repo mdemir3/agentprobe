@@ -22,11 +22,15 @@ _load_env_files()
 def pytest_report_header(config) -> str:
     """Report whether LLM keys are visible to tests (must be in `.env`, not `.env.example`)."""
     env_files = [
-        p.name for p in (_PROJECT_ROOT / ".env", _PROJECT_ROOT / ".env.local") if p.is_file()
+        p.name
+        for p in (_PROJECT_ROOT / ".env", _PROJECT_ROOT / ".env.local")
+        if p.is_file()
     ]
     ak = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     ok = os.environ.get("OPENAI_API_KEY", "").strip()
-    use_mcp_bridge = os.environ.get("AGENTPROBE_USE_MCP_BRIDGE", "").strip().lower() in {
+    use_mcp_bridge = os.environ.get(
+        "AGENTPROBE_USE_MCP_BRIDGE", ""
+    ).strip().lower() in {
         "1",
         "true",
         "yes",
@@ -43,7 +47,9 @@ def pytest_report_header(config) -> str:
         "on",
     }
     ollama_model = os.environ.get("OLLAMA_MODEL", "").strip()
-    ollama_base = os.environ.get("OLLAMA_BASE_URL", "").strip() or "http://127.0.0.1:11434"
+    ollama_base = (
+        os.environ.get("OLLAMA_BASE_URL", "").strip() or "http://127.0.0.1:11434"
+    )
 
     if use_mcp_bridge or mcp_bridge_url:
         url = mcp_bridge_url or "http://127.0.0.1:9000"

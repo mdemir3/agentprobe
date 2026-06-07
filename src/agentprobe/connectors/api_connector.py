@@ -59,9 +59,13 @@ class APIConnector(BaseConnector):
         try:
             resp = await self._client.get(self.health_endpoint)
             if resp.status_code >= 500:
-                raise ConnectionError(f"Target agent at {self.url} returned {resp.status_code}")
+                raise ConnectionError(
+                    f"Target agent at {self.url} returned {resp.status_code}"
+                )
         except httpx.ConnectError as e:
-            raise ConnectionError(f"Cannot reach target agent at {self.url}: {e}") from e
+            raise ConnectionError(
+                f"Cannot reach target agent at {self.url}: {e}"
+            ) from e
 
     async def discover(self) -> TargetProfile:
         """Discover the agent's capabilities via its tools/schema endpoint."""
@@ -75,7 +79,9 @@ class APIConnector(BaseConnector):
                 resp = await self._client.get(self.tools_endpoint)
                 if resp.status_code == 200:
                     data = resp.json()
-                    tool_list = data if isinstance(data, list) else data.get("tools", [])
+                    tool_list = (
+                        data if isinstance(data, list) else data.get("tools", [])
+                    )
                     for t in tool_list:
                         tools.append(
                             ToolSchema(
@@ -122,9 +128,9 @@ class APIConnector(BaseConnector):
                                 request_body = details.get("requestBody", {})
                                 if request_body:
                                     content = request_body.get("content", {})
-                                    json_schema = content.get("application/json", {}).get(
-                                        "schema", {}
-                                    )
+                                    json_schema = content.get(
+                                        "application/json", {}
+                                    ).get("schema", {})
                                     params = json_schema.get("properties", {})
                                     required = json_schema.get("required", [])
 
@@ -196,7 +202,9 @@ class APIConnector(BaseConnector):
         if isinstance(data, dict):
             usage = data.get("usage", {})
             input_tokens = usage.get("input_tokens", usage.get("prompt_tokens", 0))
-            output_tokens = usage.get("output_tokens", usage.get("completion_tokens", 0))
+            output_tokens = usage.get(
+                "output_tokens", usage.get("completion_tokens", 0)
+            )
 
         return {
             "response_text": response_text,

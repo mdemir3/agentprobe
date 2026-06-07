@@ -50,7 +50,9 @@ def cli():
 @click.option("--name", default="", help="Friendly name for this target agent")
 @click.option("--auth-token", default="", help="Authorization bearer token")
 @click.option("--chat-endpoint", default="/chat", help="Chat endpoint path (API only)")
-@click.option("--tools-endpoint", default="/tools", help="Tools endpoint path (API only)")
+@click.option(
+    "--tools-endpoint", default="/tools", help="Tools endpoint path (API only)"
+)
 @click.option("--output", "-o", default="", help="Save profile to JSON file")
 def connect(
     url: str,
@@ -72,7 +74,9 @@ def connect(
         agentprobe connect http://localhost:8001 --name "My RAG Agent" -o profile.json
     """
     _run_async(
-        _connect_async(url, connector_type, name, auth_token, chat_endpoint, tools_endpoint, output)
+        _connect_async(
+            url, connector_type, name, auth_token, chat_endpoint, tools_endpoint, output
+        )
     )
 
 
@@ -200,7 +204,9 @@ def _display_profile(profile: TargetProfile):
     default="rest",
     help="Target type: rest/ollama (Ollama API), api (agent REST), mcp",
 )
-@click.option("--tests", default=20, show_default=True, help="Number of test cases to run")
+@click.option(
+    "--tests", default=20, show_default=True, help="Number of test cases to run"
+)
 @click.option(
     "--model",
     default="llama3.1",
@@ -208,7 +214,9 @@ def _display_profile(profile: TargetProfile):
     help="Ollama model name (rest/ollama only)",
 )
 @click.option("--name", default="", help="Friendly name for the target")
-@click.option("--concurrency", default=3, show_default=True, help="Parallel test executions")
+@click.option(
+    "--concurrency", default=3, show_default=True, help="Parallel test executions"
+)
 @click.option(
     "--runs",
     default=1,
@@ -222,7 +230,10 @@ def _display_profile(profile: TargetProfile):
     help="Base random seed passed to the target (e.g. Ollama options.seed)",
 )
 @click.option(
-    "-o", "--output", default="", help="Write full report JSON (incl. confidence_interval)"
+    "-o",
+    "--output",
+    default="",
+    help="Write full report JSON (incl. confidence_interval)",
 )
 @click.option(
     "--temperature",
@@ -360,7 +371,9 @@ async def _probe_async(
             )
 
             console.print("[cyan]Evaluating results…[/]\n")
-            report = await evaluate_run(run=run, plan=plan, target=profile, runs=runs, seed=seed)
+            report = await evaluate_run(
+                run=run, plan=plan, target=profile, runs=runs, seed=seed
+            )
             _display_quality_report(report)
 
             if output:
@@ -430,7 +443,8 @@ def _display_quality_report(report: QualityReport) -> None:
     )
     table.add_row(
         "Avg latency",
-        _fmt_mean_std(report.avg_latency_ms, report.avg_latency_ms_std, pct=False) + " ms",
+        _fmt_mean_std(report.avg_latency_ms, report.avg_latency_ms_std, pct=False)
+        + " ms",
     )
     table.add_row("P95 latency", f"{report.p95_latency_ms:.0f} ms")
     table.add_row("Total tokens", str(report.total_tokens))

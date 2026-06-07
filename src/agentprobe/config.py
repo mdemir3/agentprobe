@@ -20,7 +20,9 @@ class Settings(BaseSettings):
     cheap_model: str = "gpt-4o-mini"
 
     # Database
-    database_url: str = "postgresql+asyncpg://agentprobe:agentprobe@localhost:5432/agentprobe"
+    database_url: str = (
+        "postgresql+asyncpg://agentprobe:agentprobe@localhost:5432/agentprobe"
+    )
 
     # ChromaDB
     chroma_host: str = "localhost"
@@ -56,7 +58,9 @@ class Settings(BaseSettings):
 
     def estimate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
         input_cost = self.cost_per_1m_input.get(model, 3.0) * input_tokens / 1_000_000
-        output_cost = self.cost_per_1m_output.get(model, 15.0) * output_tokens / 1_000_000
+        output_cost = (
+            self.cost_per_1m_output.get(model, 15.0) * output_tokens / 1_000_000
+        )
         return round(input_cost + output_cost, 6)
 
 

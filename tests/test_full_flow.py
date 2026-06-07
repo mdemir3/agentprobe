@@ -38,7 +38,9 @@ def _truthy(value: str | None) -> bool:
 
 
 def _ollama_enabled() -> bool:
-    return _truthy(os.environ.get("AGENTPROBE_USE_OLLAMA")) or bool(os.environ.get("OLLAMA_MODEL"))
+    return _truthy(os.environ.get("AGENTPROBE_USE_OLLAMA")) or bool(
+        os.environ.get("OLLAMA_MODEL")
+    )
 
 
 def _mcp_bridge_enabled() -> bool:

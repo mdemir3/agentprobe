@@ -91,7 +91,7 @@ async def execute_test_run(
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for result in results:
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 run.results.append(
                     TestResult(
                         test_case_id="unknown",

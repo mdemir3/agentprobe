@@ -25,6 +25,7 @@ class RegisterTargetRequest(BaseModel):
 @router.post("/", response_model=TargetProfile)
 async def register_target(req: RegisterTargetRequest):
     """Register and discover a new target agent."""
+    connector: MCPConnector | APIConnector
     if req.connector_type == "mcp":
         connector = MCPConnector(url=req.url, name=req.name, auth_token=req.auth_token)
     else:

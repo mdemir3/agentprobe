@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
+from typing import Any
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -67,7 +68,7 @@ class GroundTruthRetriever:
         try:
             col = self.client.get_collection(
                 name=self._collection_name(target_id),
-                embedding_function=self.embedding_fn,
+                embedding_function=self.embedding_fn,  # type: ignore[arg-type]
             )
             return col.count() > 0
         except Exception:
@@ -92,7 +93,7 @@ class GroundTruthRetriever:
         try:
             collection = self.client.get_collection(
                 name=self._collection_name(target_id),
-                embedding_function=self.embedding_fn,
+                embedding_function=self.embedding_fn,  # type: ignore[arg-type]
             )
         except Exception:
             return []
@@ -106,11 +107,12 @@ class GroundTruthRetriever:
             return []
 
         chunks: list[RetrievedChunk] = []
-        documents = results.get("documents", [[]])[0]
-        metadatas = results.get("metadatas", [[]])[0]
-        distances = results.get("distances", [[]])[0]
+        documents = (results.get("documents") or [[]])[0]
+        metadatas = (results.get("metadatas") or [[]])[0]
+        distances = (results.get("distances") or [[]])[0]
 
         for doc, meta, dist in zip(documents, metadatas, distances):
+            meta_dict: dict[str, Any] = dict(meta) if meta else {}
             # ChromaDB distance: lower = more similar. Convert to 0-1 score.
             # Typical cosine distance range is 0-2, so we invert and normalize.
             relevance = max(0.0, min(1.0, 1.0 - (dist / 2.0)))
@@ -118,9 +120,9 @@ class GroundTruthRetriever:
             chunks.append(
                 RetrievedChunk(
                     text=doc,
-                    source_file=meta.get("source_file", "unknown") if meta else "unknown",
+                    source_file=str(meta_dict.get("source_file", "unknown")),
                     relevance_score=round(relevance, 3),
-                    chunk_index=meta.get("chunk_index", 0) if meta else 0,
+                    chunk_index=int(meta_dict.get("chunk_index", 0)),
                 )
             )
 
@@ -153,7 +155,7 @@ class GroundTruthRetriever:
         try:
             collection = self.client.get_collection(
                 name=self._collection_name(target_id),
-                embedding_function=self.embedding_fn,
+                embedding_function=self.embedding_fn,  # type: ignore[arg-type]
             )
             return collection.count()
         except Exception:

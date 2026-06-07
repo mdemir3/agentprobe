@@ -65,7 +65,9 @@ class MCPConnector(BaseConnector):
                 if not self.name or self.name == self.url:
                     self.name = server_info.get("name", self.name)
         except httpx.HTTPError as e:
-            raise ConnectionError(f"Failed to initialize MCP session at {self.url}: {e}") from e
+            raise ConnectionError(
+                f"Failed to initialize MCP session at {self.url}: {e}"
+            ) from e
 
     async def discover(self) -> TargetProfile:
         """Discover all tools and resources on the MCP server."""
@@ -187,7 +189,9 @@ class MCPConnector(BaseConnector):
             "error": error,
         }
 
-    async def _call_tool(self, tool_name: str, arguments: dict[str, Any]) -> ToolCallRecord:
+    async def _call_tool(
+        self, tool_name: str, arguments: dict[str, Any]
+    ) -> ToolCallRecord:
         """Call a specific tool on the MCP server."""
         start = time.monotonic()
 

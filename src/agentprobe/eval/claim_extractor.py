@@ -66,7 +66,11 @@ async def extract_claims(response_text: str) -> list[Claim]:
     if not response_text or len(response_text.strip()) < 10:
         return []
 
-    use_ollama = os.environ.get("AGENTPROBE_USE_OLLAMA", "").lower() in ("1", "true", "yes")
+    use_ollama = os.environ.get("AGENTPROBE_USE_OLLAMA", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
 
     try:
         claims: list[Claim] = []

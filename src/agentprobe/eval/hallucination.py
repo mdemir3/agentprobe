@@ -174,7 +174,9 @@ class HallucinationDetector:
         supported = sum(1 for j in judgements if j.verdict == ClaimVerdict.SUPPORTED)
         refuted = sum(1 for j in judgements if j.verdict == ClaimVerdict.REFUTED)
         not_found = sum(1 for j in judgements if j.verdict == ClaimVerdict.NOT_FOUND)
-        needs_review = sum(1 for j in judgements if j.verdict == ClaimVerdict.NEEDS_REVIEW)
+        needs_review = sum(
+            1 for j in judgements if j.verdict == ClaimVerdict.NEEDS_REVIEW
+        )
 
         total = len(judgements)
         faithfulness = supported / total if total > 0 else 0.0
@@ -265,7 +267,11 @@ class HallucinationDetector:
 
     async def _call_judge_llm(self, prompt: str) -> dict:
         """Route the judge call to whichever LLM is configured."""
-        use_ollama = os.environ.get("AGENTPROBE_USE_OLLAMA", "").lower() in ("1", "true", "yes")
+        use_ollama = os.environ.get("AGENTPROBE_USE_OLLAMA", "").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
 
         if use_ollama:
             return await self._judge_ollama(prompt)

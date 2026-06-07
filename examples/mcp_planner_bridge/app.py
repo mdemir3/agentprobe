@@ -111,7 +111,11 @@ async def mcp_rpc(req: RpcRequest):
                     {
                         "name": "generate_test_plan",
                         "description": "Generate test cases for AgentProbe",
-                        "inputSchema": {"type": "object", "properties": {}, "required": []},
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {},
+                            "required": [],
+                        },
                     }
                 ]
             },
@@ -131,7 +135,14 @@ async def mcp_rpc(req: RpcRequest):
 
         categories = args.get(
             "categories",
-            ["happy_path", "edge_case", "adversarial", "multi_step", "safety", "tool_reliability"],
+            [
+                "happy_path",
+                "edge_case",
+                "adversarial",
+                "multi_step",
+                "safety",
+                "tool_reliability",
+            ],
         )
         max_cases = int(args.get("max_cases", 10))
         cases = _make_cases(categories, max_cases)

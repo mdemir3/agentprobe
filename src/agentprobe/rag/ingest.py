@@ -131,7 +131,7 @@ class DocumentIngestor:
 
         collection = self.client.create_collection(
             name=collection_name,
-            embedding_function=self.embedding_fn,
+            embedding_function=self.embedding_fn,  # type: ignore[arg-type]
             metadata={"target_id": target_id},
         )
 
@@ -223,7 +223,11 @@ class DocumentIngestor:
                 window_start = max(position + self.chunk_size - 200, position)
                 sentence_break = -1
                 for i in range(end - 1, window_start, -1):
-                    if normalized[i] in ".!?\n" and i + 1 < text_len and normalized[i + 1] in " \n":
+                    if (
+                        normalized[i] in ".!?\n"
+                        and i + 1 < text_len
+                        and normalized[i + 1] in " \n"
+                    ):
                         sentence_break = i + 1
                         break
                 if sentence_break > 0:
