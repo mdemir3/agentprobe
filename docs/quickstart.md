@@ -90,7 +90,12 @@ docker compose up
 ```
 
 - API: http://localhost:8000 (`/docs` for the OpenAPI UI)
-- Dashboard: http://localhost:5173
+- Dashboard: http://localhost:3000
+
+> **Note:** the dashboard reads from the API's (in-memory) store, so drive the
+> flow from the dashboard UI (add target → generate plan → run tests). Reports
+> produced by the standalone `agentprobe probe` CLI are written to JSON/stdout
+> and are not shared with the API store.
 
 ## Next steps
 
