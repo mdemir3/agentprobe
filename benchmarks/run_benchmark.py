@@ -126,15 +126,13 @@ async def _run_single(
     heuristic_scores = []
     for result in run.results:
         if result.response_text:
-            heuristic_scores.append(
-                score_response(corpus_id, corpus_text, result.response_text)
-            )
+            heuristic_scores.append(score_response(corpus_id, corpus_text, result.response_text))
 
     avg_heuristic_hallucination = 0.0
     if heuristic_scores:
-        avg_heuristic_hallucination = sum(
-            s["hallucination_rate"] for s in heuristic_scores
-        ) / len(heuristic_scores)
+        avg_heuristic_hallucination = sum(s["hallucination_rate"] for s in heuristic_scores) / len(
+            heuristic_scores
+        )
 
     latencies = [r.latency_ms for r in run.results if r.latency_ms > 0]
 
@@ -162,7 +160,12 @@ async def run_all(max_cases: int, skip_ingest: bool) -> list[dict]:
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 
     # Rule-based planner only (no API keys required for benchmark harness)
-    for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "AGENTPROBE_USE_OLLAMA", "AGENTPROBE_USE_MCP_BRIDGE"):
+    for key in (
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "AGENTPROBE_USE_OLLAMA",
+        "AGENTPROBE_USE_MCP_BRIDGE",
+    ):
         os.environ.pop(key, None)
 
     results: list[dict] = []
@@ -203,9 +206,7 @@ async def run_all(max_cases: int, skip_ingest: bool) -> list[dict]:
         "max_cases": max_cases,
         "cells": results,
     }
-    (RESULTS_DIR / "summary.json").write_text(
-        json.dumps(summary, indent=2), encoding="utf-8"
-    )
+    (RESULTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return results
 
 

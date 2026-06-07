@@ -20,8 +20,10 @@ _load_env_files()
 
 
 def pytest_report_header(config) -> str:
-    """Tell users whether LLM keys are visible to tests (must be in `.env`, not only `.env.example`)."""
-    env_files = [p.name for p in (_PROJECT_ROOT / ".env", _PROJECT_ROOT / ".env.local") if p.is_file()]
+    """Report whether LLM keys are visible to tests (must be in `.env`, not `.env.example`)."""
+    env_files = [
+        p.name for p in (_PROJECT_ROOT / ".env", _PROJECT_ROOT / ".env.local") if p.is_file()
+    ]
     ak = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     ok = os.environ.get("OPENAI_API_KEY", "").strip()
     use_mcp_bridge = os.environ.get("AGENTPROBE_USE_MCP_BRIDGE", "").strip().lower() in {
@@ -31,8 +33,15 @@ def pytest_report_header(config) -> str:
         "on",
     }
     mcp_bridge_url = os.environ.get("AGENTPROBE_MCP_BRIDGE_URL", "").strip()
-    mcp_bridge_tool = os.environ.get("AGENTPROBE_MCP_BRIDGE_TOOL", "").strip() or "generate_test_plan"
-    use_ollama = os.environ.get("AGENTPROBE_USE_OLLAMA", "").strip().lower() in {"1", "true", "yes", "on"}
+    mcp_bridge_tool = (
+        os.environ.get("AGENTPROBE_MCP_BRIDGE_TOOL", "").strip() or "generate_test_plan"
+    )
+    use_ollama = os.environ.get("AGENTPROBE_USE_OLLAMA", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
     ollama_model = os.environ.get("OLLAMA_MODEL", "").strip()
     ollama_base = os.environ.get("OLLAMA_BASE_URL", "").strip() or "http://127.0.0.1:11434"
 
@@ -59,7 +68,8 @@ def pytest_report_header(config) -> str:
         parts.append("provider settings from exported shell env (no project .env file)")
     else:
         parts.append(
-            f"no {_PROJECT_ROOT / '.env'} — copy .env.example to .env and set Ollama or LLM provider vars"
+            f"no {_PROJECT_ROOT / '.env'} — copy .env.example to .env and "
+            "set Ollama or LLM provider vars"
         )
 
     return " | ".join(parts)

@@ -55,9 +55,7 @@ def _wilson_bounds(p_hat: float, n: int, confidence: float) -> tuple[float, floa
     z2 = z * z
     denom = 1.0 + z2 / n
     center = (p_hat + z2 / (2.0 * n)) / denom
-    margin = (z / denom) * math.sqrt(
-        (p_hat * (1.0 - p_hat) / n) + z2 / (4.0 * n * n)
-    )
+    margin = (z / denom) * math.sqrt((p_hat * (1.0 - p_hat) / n) + z2 / (4.0 * n * n))
     return _clip_score_bounds(center - margin, center + margin)
 
 

@@ -20,9 +20,7 @@ def score_response(corpus_id: str, corpus_text: str, response_text: str) -> dict
     """Return faithfulness / hallucination metrics using keyword overlap."""
     wrong_facts = CORPUS_WRONG_FACTS.get(corpus_id, [])
     sentences = [
-        s.strip()
-        for s in re.split(r"(?<=[.!?])\s+", response_text.strip())
-        if len(s.strip()) >= 20
+        s.strip() for s in re.split(r"(?<=[.!?])\s+", response_text.strip()) if len(s.strip()) >= 20
     ]
     if not sentences:
         return {

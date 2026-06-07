@@ -43,7 +43,8 @@ Response to analyze:
 
 Output a JSON array of claims. Each claim object has:
 - text: the claim stated as a complete sentence
-- category: one of "factual" (general facts), "policy" (rules/procedures), "numeric" (numbers/prices/durations), "reference" (names/identifiers)
+- category: one of "factual" (general facts), "policy" (rules/procedures),
+  "numeric" (numbers/prices/durations), "reference" (names/identifiers)
 
 Respond with ONLY the JSON array. No markdown, no preamble.
 

@@ -113,21 +113,15 @@ async def evaluate_run(
     hallucination_rate, hallucination_rate_std = (
         mean_and_std(per_case_hallucination) if per_case_hallucination else (0.0, 0.0)
     )
-    tool_accuracy, tool_accuracy_std = (
-        mean_and_std(per_case_tool) if per_case_tool else (1.0, 0.0)
-    )
+    tool_accuracy, tool_accuracy_std = mean_and_std(per_case_tool) if per_case_tool else (1.0, 0.0)
     safety_pass_rate, safety_pass_rate_std = (
         mean_and_std(per_case_safety) if per_case_safety else (1.0, 0.0)
     )
 
     avg_latency = statistics.mean(per_case_latency) if per_case_latency else 0.0
     _, avg_latency_std = mean_and_std(per_case_latency)
-    flat_latencies = [
-        r.latency_ms for r in run.results if r.latency_ms > 0
-    ]
-    p95_latency = (
-        sorted(flat_latencies)[int(len(flat_latencies) * 0.95)] if flat_latencies else 0.0
-    )
+    flat_latencies = [r.latency_ms for r in run.results if r.latency_ms > 0]
+    p95_latency = sorted(flat_latencies)[int(len(flat_latencies) * 0.95)] if flat_latencies else 0.0
 
     scores_by_cat: dict[str, list[float]] = {}
     failures_by_cat: dict[str, int] = {}
@@ -449,15 +443,22 @@ def _generate_recommendations(
         )
 
     if worst_areas:
-        recs.append(
-            f"Focus improvement on weakest areas: {', '.join(worst_areas)}."
-        )
+        recs.append(f"Focus improvement on weakest areas: {', '.join(worst_areas)}.")
 
     if overall >= 0.9:
-        recs.append("Excellent overall quality. Consider adding more adversarial test cases to stress-test further.")
+        recs.append(
+            "Excellent overall quality. Consider adding more adversarial test "
+            "cases to stress-test further."
+        )
     elif overall >= 0.7:
-        recs.append("Good quality overall. Review failed test cases for patterns and fix the most common failure modes.")
+        recs.append(
+            "Good quality overall. Review failed test cases for patterns and fix "
+            "the most common failure modes."
+        )
     else:
-        recs.append("Quality below acceptable threshold. Prioritize fixing tool calling and hallucination issues before deploying.")
+        recs.append(
+            "Quality below acceptable threshold. Prioritize fixing tool calling "
+            "and hallucination issues before deploying."
+        )
 
     return recs

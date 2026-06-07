@@ -156,7 +156,9 @@ def generate_charts(results: list[dict], charts_dir: Path) -> dict[str, Path]:
     ax.set_title("Overall Quality Score (%) — Agent × Corpus")
     for i in range(len(agents)):
         for j in range(len(corpora)):
-            ax.text(j, i, f"{matrix[i][j]:.0f}", ha="center", va="center", color="black", fontsize=9)
+            ax.text(
+                j, i, f"{matrix[i][j]:.0f}", ha="center", va="center", color="black", fontsize=9
+            )
     fig.colorbar(im, ax=ax, label="Score %")
     fig.tight_layout()
     p = charts_dir / "score_heatmap.png"
@@ -187,7 +189,8 @@ def write_report(
         f"**Matrix:** {len(agg)} agents × {len({r['corpus_id'] for r in results})} RAG corpora  ",
         f"**Runs:** {len(results)} probe executions  ",
         "",
-        "> Autonomous QA for AI agents — comparable scores across LangChain, CrewAI, OpenAI Assistants, AutoGen, and MCP.",
+        "> Autonomous QA for AI agents — comparable scores across LangChain, "
+        "CrewAI, OpenAI Assistants, AutoGen, and MCP.",
         "",
         "## Executive summary",
         "",
@@ -197,8 +200,10 @@ def write_report(
     worst = agents_sorted[-1]
     lines.extend(
         [
-            f"- **Highest overall score:** {agg[best]['display_name']} ({agg[best]['overall_score']:.1%})",
-            f"- **Lowest overall score:** {agg[worst]['display_name']} ({agg[worst]['overall_score']:.1%})",
+            f"- **Highest overall score:** {agg[best]['display_name']} "
+            f"({agg[best]['overall_score']:.1%})",
+            f"- **Lowest overall score:** {agg[worst]['display_name']} "
+            f"({agg[worst]['overall_score']:.1%})",
             f"- **Lowest hallucination rate:** "
             f"{agg[min(agg, key=lambda a: agg[a]['hallucination_rate'])]['display_name']} "
             f"({min(agg[a]['hallucination_rate'] for a in agg):.1%} avg)",
@@ -265,11 +270,13 @@ def write_report(
             "",
             "## Methodology",
             "",
-            "See [README.md](../README.md) for corpus descriptions, agent wrappers, and reproduction steps.",
+            "See [README.md](../README.md) for corpus descriptions, agent "
+            "wrappers, and reproduction steps.",
             "",
             "---",
             "",
-            "*Built with [AgentProbe](https://github.com/mdemir3/agentprobe) — FastAPI · LangGraph · ChromaDB · DeepEval*",
+            "*Built with [AgentProbe](https://github.com/mdemir3/agentprobe) — "
+            "FastAPI · LangGraph · ChromaDB · DeepEval*",
         ]
     )
 

@@ -74,7 +74,8 @@ class HallucinationReport:
 # ─── LLM Judge Prompt ────────────────────────────────────────────────────────
 
 
-JUDGE_PROMPT = """You are a fact-checking judge. Your job is to determine whether a claim made by an AI agent is supported, refuted, or not mentioned in the provided source documents.
+JUDGE_PROMPT = """You are a fact-checking judge. Your job is to determine whether a claim
+made by an AI agent is supported, refuted, or not mentioned in the provided source documents.
 
 SOURCE DOCUMENTS:
 {evidence}
@@ -91,10 +92,12 @@ Evaluate the claim and respond with JSON:
 
 Rules:
 - "supported": The source documents explicitly confirm this claim
-- "refuted": The source documents explicitly contradict this claim (different numbers, different rules, etc.)
+- "refuted": The source documents explicitly contradict this claim
+  (different numbers, different rules, etc.)
 - "not_found": The source documents don't mention this topic at all
 
-Be strict. If the claim says "free shipping over $50" but docs say "free shipping over $75", that is REFUTED, not supported.
+Be strict. If the claim says "free shipping over $50" but docs say
+"free shipping over $75", that is REFUTED, not supported.
 
 Respond with ONLY the JSON object. No markdown, no preamble."""
 
@@ -374,4 +377,8 @@ class HallucinationDetector:
                 except json.JSONDecodeError:
                     pass
 
-        return {"verdict": "needs_review", "reasoning": "Could not parse judge output", "confidence": 0.0}
+        return {
+            "verdict": "needs_review",
+            "reasoning": "Could not parse judge output",
+            "confidence": 0.0,
+        }

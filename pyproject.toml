@@ -75,6 +75,9 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
+# UP042: we intentionally use `class X(str, Enum)` rather than `StrEnum` to keep
+# stable `str()` representations across Python 3.11/3.12 for logging and prompts.
+ignore = ["UP042"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

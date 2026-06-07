@@ -93,7 +93,10 @@ def calculate_discount(subtotal: float, coupon_code: str) -> dict:
 TOOLS = [
     {
         "name": "search_knowledge",
-        "description": "Search the company knowledge base for information about policies, shipping, contacts, and warranties",
+        "description": (
+            "Search the company knowledge base for information about "
+            "policies, shipping, contacts, and warranties"
+        ),
         "parameters": {
             "query": {"type": "string", "description": "Search query"},
         },
@@ -109,7 +112,10 @@ TOOLS = [
     },
     {
         "name": "calculate_discount",
-        "description": "Calculate the discount amount and final total for a given subtotal and coupon code",
+        "description": (
+            "Calculate the discount amount and final total for a given "
+            "subtotal and coupon code"
+        ),
         "parameters": {
             "subtotal": {"type": "number", "description": "Order subtotal in USD"},
             "coupon_code": {"type": "string", "description": "Coupon code to apply"},
@@ -121,9 +127,7 @@ TOOLS = [
 TOOL_FUNCTIONS = {
     "search_knowledge": lambda args: search_knowledge(args["query"]),
     "get_order_status": lambda args: get_order_status(args["order_id"]),
-    "calculate_discount": lambda args: calculate_discount(
-        args["subtotal"], args["coupon_code"]
-    ),
+    "calculate_discount": lambda args: calculate_discount(args["subtotal"], args["coupon_code"]),
 }
 
 
@@ -165,24 +169,31 @@ async def chat(request: ChatRequest):
         order_id = order_match.group(1) if order_match else "UNKNOWN"
 
         result = get_order_status(f"ORD-{order_id}")
-        tool_calls.append({
-            "name": "get_order_status",
-            "arguments": {"order_id": f"ORD-{order_id}"},
-            "result": result,
-        })
+        tool_calls.append(
+            {
+                "name": "get_order_status",
+                "arguments": {"order_id": f"ORD-{order_id}"},
+                "result": result,
+            }
+        )
         response_parts.append(
             f"Your order ORD-{order_id} is currently {result['status']}. "
             f"Tracking number: {result['tracking_number']}. "
             f"Estimated delivery: {result['estimated_delivery']}."
         )
 
-    if any(word in message for word in ["refund", "return", "policy", "shipping", "warranty", "contact"]):
+    if any(
+        word in message
+        for word in ["refund", "return", "policy", "shipping", "warranty", "contact"]
+    ):
         result = search_knowledge(request.message)
-        tool_calls.append({
-            "name": "search_knowledge",
-            "arguments": {"query": request.message},
-            "result": result,
-        })
+        tool_calls.append(
+            {
+                "name": "search_knowledge",
+                "arguments": {"query": request.message},
+                "result": result,
+            }
+        )
         response_parts.append(result)
 
     if any(word in message for word in ["discount", "coupon", "promo"]) or re.search(
@@ -196,17 +207,18 @@ async def chat(request: ChatRequest):
         amount = float(amount_match.group(1)) if amount_match else 100.0
 
         result = calculate_discount(amount, code)
-        tool_calls.append({
-            "name": "calculate_discount",
-            "arguments": {"subtotal": amount, "coupon_code": code},
-            "result": result,
-        })
+        tool_calls.append(
+            {
+                "name": "calculate_discount",
+                "arguments": {"subtotal": amount, "coupon_code": code},
+                "result": result,
+            }
+        )
         if "error" in result:
             response_parts.append(result["error"])
         else:
             response_parts.append(
-                f"Applied {code}: ${result['discount']} off. "
-                f"Your total is ${result['total']}."
+                f"Applied {code}: ${result['discount']} off. " f"Your total is ${result['total']}."
             )
 
     # Default response if no tools matched

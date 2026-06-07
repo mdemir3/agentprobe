@@ -177,9 +177,7 @@ def create_benchmark_app(profile: AgentProfile) -> FastAPI:
             args = {"query": req.message[:120]}
             tool_result = passage
 
-        response_text = (
-            f"{profile.style_prefix}{tool_result}{injected}"
-        ).strip()
+        response_text = (f"{profile.style_prefix}{tool_result}{injected}").strip()
 
         return {
             "response": response_text,
@@ -190,7 +188,10 @@ def create_benchmark_app(profile: AgentProfile) -> FastAPI:
                     "result": tool_result[:300],
                 }
             ],
-            "usage": {"input_tokens": len(req.message.split()), "output_tokens": len(response_text.split())},
+            "usage": {
+                "input_tokens": len(req.message.split()),
+                "output_tokens": len(response_text.split()),
+            },
             "metadata": {
                 "framework": profile.framework,
                 "agent_id": profile.agent_id,

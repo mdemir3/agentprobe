@@ -144,4 +144,8 @@ async def mcp_rpc(req: RpcRequest):
             "result": {"content": [{"type": "text", "text": json.dumps(cases)}]},
         }
 
-    return {"jsonrpc": "2.0", "id": req.id, "error": {"code": -32601, "message": "Method not found"}}
+    return {
+        "jsonrpc": "2.0",
+        "id": req.id,
+        "error": {"code": -32601, "message": "Method not found"},
+    }

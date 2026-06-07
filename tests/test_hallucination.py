@@ -106,7 +106,9 @@ async def test_accurate_response_high_faithfulness(ingested_target, chroma_path)
     assert report.total_claims >= 1
     assert report.faithfulness_score >= 0.7
     print(f"\nAccurate response: faithfulness={report.faithfulness_score}")
-    print(f"  Supported: {report.supported}, Refuted: {report.refuted}, Not found: {report.not_found}")
+    print(
+        f"  Supported: {report.supported}, Refuted: {report.refuted}, Not found: {report.not_found}"
+    )
 
 
 @pytest.mark.asyncio

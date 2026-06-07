@@ -72,9 +72,7 @@ def connect(
         agentprobe connect http://localhost:8001 --name "My RAG Agent" -o profile.json
     """
     _run_async(
-        _connect_async(
-            url, connector_type, name, auth_token, chat_endpoint, tools_endpoint, output
-        )
+        _connect_async(url, connector_type, name, auth_token, chat_endpoint, tools_endpoint, output)
     )
 
 
@@ -223,7 +221,9 @@ def _display_profile(profile: TargetProfile):
     show_default=True,
     help="Base random seed passed to the target (e.g. Ollama options.seed)",
 )
-@click.option("-o", "--output", default="", help="Write full report JSON (incl. confidence_interval)")
+@click.option(
+    "-o", "--output", default="", help="Write full report JSON (incl. confidence_interval)"
+)
 @click.option(
     "--temperature",
     default=0.7,
@@ -360,9 +360,7 @@ async def _probe_async(
             )
 
             console.print("[cyan]Evaluating results…[/]\n")
-            report = await evaluate_run(
-                run=run, plan=plan, target=profile, runs=runs, seed=seed
-            )
+            report = await evaluate_run(run=run, plan=plan, target=profile, runs=runs, seed=seed)
             _display_quality_report(report)
 
             if output:

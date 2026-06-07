@@ -59,9 +59,7 @@ class APIConnector(BaseConnector):
         try:
             resp = await self._client.get(self.health_endpoint)
             if resp.status_code >= 500:
-                raise ConnectionError(
-                    f"Target agent at {self.url} returned {resp.status_code}"
-                )
+                raise ConnectionError(f"Target agent at {self.url} returned {resp.status_code}")
         except httpx.ConnectError as e:
             raise ConnectionError(f"Cannot reach target agent at {self.url}: {e}") from e
 
@@ -124,9 +122,9 @@ class APIConnector(BaseConnector):
                                 request_body = details.get("requestBody", {})
                                 if request_body:
                                     content = request_body.get("content", {})
-                                    json_schema = content.get(
-                                        "application/json", {}
-                                    ).get("schema", {})
+                                    json_schema = content.get("application/json", {}).get(
+                                        "schema", {}
+                                    )
                                     params = json_schema.get("properties", {})
                                     required = json_schema.get("required", [])
 
@@ -176,12 +174,14 @@ class APIConnector(BaseConnector):
                 # Extract tool calls if present
                 for tc in data.get("tool_calls", []):
                     tname = tc.get("name", tc.get("tool", ""))
-                    tool_calls.append({
-                        "name": tname,
-                        "tool_name": tname,
-                        "arguments": tc.get("arguments", tc.get("args", {})),
-                        "result": tc.get("result", tc.get("output", "")),
-                    })
+                    tool_calls.append(
+                        {
+                            "name": tname,
+                            "tool_name": tname,
+                            "arguments": tc.get("arguments", tc.get("args", {})),
+                            "result": tc.get("result", tc.get("output", "")),
+                        }
+                    )
 
         except httpx.HTTPError as e:
             error = f"HTTP error: {e}"

@@ -42,9 +42,7 @@ class OllamaConnector(BaseConnector):
             resp.raise_for_status()
             data = resp.json()
             self._available_models = [
-                m.get("name", "")
-                for m in data.get("models", [])
-                if m.get("name")
+                m.get("name", "") for m in data.get("models", []) if m.get("name")
             ]
         except httpx.ConnectError as e:
             raise ConnectionError(
@@ -118,7 +116,9 @@ class OllamaConnector(BaseConnector):
             resp.raise_for_status()
             data = resp.json()
             message = data.get("message", {})
-            response_text = message.get("content", "") if isinstance(message, dict) else str(message)
+            response_text = (
+                message.get("content", "") if isinstance(message, dict) else str(message)
+            )
             input_tokens = int(data.get("prompt_eval_count", 0))
             output_tokens = int(data.get("eval_count", 0))
         except httpx.HTTPError as e:

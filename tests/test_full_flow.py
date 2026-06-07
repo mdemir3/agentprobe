@@ -65,8 +65,10 @@ def _plan_max_cases() -> int:
 def _run_dummy_agent():
     """Run the dummy agent in a subprocess."""
     import sys
+
     sys.path.insert(0, ".")
     from examples.dummy_tool_agent.app import app
+
     uvicorn.run(app, host="127.0.0.1", port=8001, log_level="error")
 
 

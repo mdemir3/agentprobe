@@ -15,6 +15,7 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     # Startup: initialize stores
     from agentprobe.api.store import Store
+
     Store.initialize()
     yield
     # Shutdown: cleanup

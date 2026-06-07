@@ -33,20 +33,24 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # Cost tracking (USD per 1M tokens)
-    cost_per_1m_input: dict[str, float] = Field(default_factory=lambda: {
-        "claude-sonnet-4-6": 3.0,
-        "claude-sonnet-4-20250514": 3.0,
-        "claude-haiku-4-5-20251001": 0.80,
-        "gpt-4o-mini": 0.15,
-        "gpt-4o": 2.50,
-    })
-    cost_per_1m_output: dict[str, float] = Field(default_factory=lambda: {
-        "claude-sonnet-4-6": 15.0,
-        "claude-sonnet-4-20250514": 15.0,
-        "claude-haiku-4-5-20251001": 4.0,
-        "gpt-4o-mini": 0.60,
-        "gpt-4o": 10.0,
-    })
+    cost_per_1m_input: dict[str, float] = Field(
+        default_factory=lambda: {
+            "claude-sonnet-4-6": 3.0,
+            "claude-sonnet-4-20250514": 3.0,
+            "claude-haiku-4-5-20251001": 0.80,
+            "gpt-4o-mini": 0.15,
+            "gpt-4o": 2.50,
+        }
+    )
+    cost_per_1m_output: dict[str, float] = Field(
+        default_factory=lambda: {
+            "claude-sonnet-4-6": 15.0,
+            "claude-sonnet-4-20250514": 15.0,
+            "claude-haiku-4-5-20251001": 4.0,
+            "gpt-4o-mini": 0.60,
+            "gpt-4o": 10.0,
+        }
+    )
 
     model_config = {"env_prefix": "AGENTPROBE_", "env_file": ".env", "extra": "ignore"}
 

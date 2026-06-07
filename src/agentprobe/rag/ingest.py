@@ -198,9 +198,7 @@ class DocumentIngestor:
         try:
             from pypdf import PdfReader
         except ImportError:
-            raise ImportError(
-                "pypdf not installed. Install with: pip install pypdf"
-            )
+            raise ImportError("pypdf not installed. Install with: pip install pypdf")
 
         reader = PdfReader(path)
         return "\n\n".join(page.extract_text() or "" for page in reader.pages)
