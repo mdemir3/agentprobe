@@ -36,7 +36,7 @@ AgentProbe is an autonomous QA platform that **discovers**, **probes**, and **ev
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/hikmetdemir/agentprobe.git
+git clone https://github.com/mdemir3/agentprobe.git
 cd agentprobe
 cp .env.example .env
 # Edit .env with your API keys
@@ -177,7 +177,7 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ---
 

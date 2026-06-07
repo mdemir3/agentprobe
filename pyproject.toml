@@ -7,7 +7,7 @@ name = "agentprobe"
 version = "0.1.0"
 description = "The first open-source AI agent that tests other AI agents"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 requires-python = ">=3.11"
 authors = [
     { name = "Hikmet Demir", email = "hikmetdemir2424@gmail.com" },
@@ -16,7 +16,7 @@ keywords = ["ai", "agents", "testing", "llm", "mcp", "evaluation", "qa"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Testing",
@@ -62,9 +62,9 @@ dev = [
 agentprobe = "agentprobe.cli:cli"
 
 [project.urls]
-Homepage = "https://github.com/hikmetdemir/agentprobe"
-Repository = "https://github.com/hikmetdemir/agentprobe"
-Issues = "https://github.com/hikmetdemir/agentprobe/issues"
+Homepage = "https://github.com/mdemir3/agentprobe"
+Repository = "https://github.com/mdemir3/agentprobe"
+Issues = "https://github.com/mdemir3/agentprobe/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentprobe"]
