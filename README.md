@@ -1,11 +1,8 @@
 # 🔍 AgentProbe
 
 [![CI](https://github.com/mdemir3/agentprobe/actions/workflows/ci.yml/badge.svg)](https://github.com/mdemir3/agentprobe/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/mdemir3/agentprobe/branch/main/graph/badge.svg)](https://codecov.io/gh/mdemir3/agentprobe)
-[![PyPI version](https://img.shields.io/pypi/v/agentprobe.svg)](https://pypi.org/project/agentprobe/)
-[![Python versions](https://img.shields.io/pypi/pyversions/agentprobe.svg)](https://pypi.org/project/agentprobe/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docker Pulls](https://img.shields.io/docker/pulls/mdemir3/agentprobe)](https://hub.docker.com/r/mdemir3/agentprobe)
 
 **The first open-source AI agent that tests other AI agents.**
 
@@ -48,7 +45,7 @@ cp .env.example .env
 docker compose up
 ```
 
-### 3. Connect to a target agent
+### 3. Connect to a target agent (discover its tools)
 
 ```bash
 # REST API agent
@@ -58,18 +55,20 @@ agentprobe connect http://localhost:8001 --type api --name "My Agent"
 agentprobe connect http://localhost:9000/mcp --type mcp
 ```
 
-### 4. Generate a test plan
+### 4. Probe it end-to-end (plan → run → evaluate → report)
+
+The `probe` command generates a test plan, executes it, and prints a quality
+report in one step:
 
 ```bash
-agentprobe plan my-agent --docs ./knowledge-base/
+agentprobe probe http://localhost:8001 --type api --tests 20 -o report.json
 ```
 
-### 5. Run tests and evaluate
-
-```bash
-agentprobe run <plan-id>
-agentprobe eval <run-id>
-```
+> **Granular flow & dashboard:** the separate *discover → plan → run → evaluate*
+> steps (and run history) are exposed through the REST API
+> (`POST /targets`, `POST /plans`, `POST /runs`, `GET /reports/{id}`) and the
+> React dashboard, both started by `docker compose up`. The CLI ships the
+> `connect`, `probe`, and `version` commands.
 
 ### Day one: probe local Ollama (zero API cost)
 
