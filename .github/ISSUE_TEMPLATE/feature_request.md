@@ -22,9 +22,9 @@ Other approaches you have thought about.
 
 Check all that apply:
 
-- [ ] Probe / test planning (LangGraph, planner backends)
+- [ ] Probe / test planning (planner backends)
 - [ ] Connectors (REST API, MCP)
-- [ ] Evaluation / quality reports (DeepEval, scorers)
+- [ ] Evaluation / quality reports (scorers, LLM judge)
 - [ ] RAG / hallucination detection (ChromaDB)
 - [ ] FastAPI API or CLI
 - [ ] React dashboard

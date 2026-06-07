@@ -13,7 +13,7 @@ AgentProbe targets **Python 3.12** with an editable install, optional Docker for
 - Node.js **18+** (dashboard only)
 - Docker & Docker Compose (optional, for Postgres, ChromaDB, and containerized services)
 
-### Python backend (FastAPI, LangGraph, ChromaDB, DeepEval)
+### Python backend (FastAPI, httpx, ChromaDB)
 
 ```bash
 git clone https://github.com/mdemir3/agentprobe.git

@@ -298,7 +298,7 @@ def write_report(
             "---",
             "",
             "*Built with [AgentProbe](https://github.com/mdemir3/agentprobe) — "
-            "FastAPI · LangGraph · ChromaDB · DeepEval*",
+            "FastAPI · ChromaDB · custom RAG-grounded scorers*",
         ]
     )
 

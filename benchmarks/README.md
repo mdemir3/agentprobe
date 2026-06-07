@@ -1,6 +1,6 @@
 # AgentProbe Benchmarks
 
-Public, reproducible benchmarks comparing **five agent stacks** against **three RAG corpora** using the AgentProbe evaluation pipeline (FastAPI · LangGraph · ChromaDB · DeepEval).
+Public, reproducible benchmarks comparing **five agent stacks** against **three RAG corpora** using the AgentProbe evaluation pipeline (FastAPI · ChromaDB · custom RAG-grounded scorers).
 
 ## Matrix
 

@@ -103,13 +103,13 @@ agentprobe probe http://localhost:8001 --type api --tests 20
 │                                                      │
 │  ┌─────────────┐    ┌──────────────────────────────┐ │
 │  │   Probe     │    │      Target Connector        │ │
-│  │   Agent     │───>│  (MCP / REST API / OpenAPI)  │─┼──> Target Agent
-│  │ (LangGraph) │    └──────────────────────────────┘ │
+│  │   Agent     │───>│  (MCP / REST API / Ollama)   │─┼──> Target Agent
+│  │ (LLM-based) │    └──────────────────────────────┘ │
 │  └──────┬──────┘                                     │
 │         │ test cases                                 │
 │  ┌──────▼──────┐    ┌──────────────────────────────┐ │
 │  │  Execution  │    │      RAG Eval Engine          │ │
-│  │   Engine    │───>│  (DeepEval + Custom Scorers)  │ │
+│  │   Engine    │───>│  (LLM judge + custom scorers) │ │
 │  │  (async)    │    └──────────┬───────────────────┘ │
 │  └─────────────┘               │                     │
 │                       ┌────────▼────────┐            │
@@ -128,14 +128,14 @@ agentprobe probe http://localhost:8001 --type api --tests 20
 
 | Component | Technology |
 |-----------|-----------|
-| Agent Framework | LangGraph |
-| LLM Providers | Anthropic Claude, OpenAI GPT |
-| Target Discovery | MCP Protocol, REST API, OpenAPI |
+| Probe orchestration | Python `asyncio` + `httpx` |
+| LLM Providers | Anthropic Claude, OpenAI, Ollama (local) |
+| Target Discovery | MCP, REST API, Ollama |
 | Vector Database | ChromaDB |
-| Eval Framework | DeepEval + Custom Scorers |
+| Evaluation | Custom RAG-grounded scorers + LLM judge |
 | Backend API | FastAPI |
 | Frontend | React + Tailwind + Recharts |
-| Database | PostgreSQL |
+| Storage | In-memory store (PostgreSQL planned) |
 | Orchestration | n8n |
 | CI/CD | GitHub Actions, GitLab CI |
 | Containerization | Docker Compose |
